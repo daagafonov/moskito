@@ -35,6 +35,7 @@
 package net.java.dev.moskito.core.producers;
 
 import java.lang.reflect.Method;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -87,12 +88,14 @@ public abstract class AbstractStats implements IStats {
 	 */
 	public IStatsSnapshot createSnapshot(String aIntervalName){
 		
+		Date dateCreatedNow = new Date();
 		Map<String, Number> snapshotProperties = new HashMap<String, Number>();
 		Method[] methods = this.getClass().getMethods();
 		try {
 			for (Method getter : methods) {
 				Class returnType = getter.getReturnType();
-				if (getter.getName().startsWith("get") && returnType.isAssignableFrom(int.class) && returnType.isAssignableFrom(long.class) && returnType.isAssignableFrom(double.class)) {
+				if (getter.getName().startsWith("get") && getter.getParameterTypes().length == 0 
+						&& returnType.isAssignableFrom(int.class) && returnType.isAssignableFrom(long.class) && returnType.isAssignableFrom(double.class)) {
 					snapshotProperties.put(getter.getName().substring(3), (Number) getter.invoke(this, null));
 				}
 			}
@@ -102,6 +105,8 @@ public abstract class AbstractStats implements IStats {
 		
 		DefaultStatsSnapshot snapshot = new DefaultStatsSnapshot();
 		snapshot.setProperties(snapshotProperties);
+		snapshot.setName(getName());
+		snapshot.setDateCreated(dateCreatedNow);
 		return snapshot;
 	}
 	

@@ -34,6 +34,9 @@
  */	
 package net.java.dev.moskito.core.producers;
 
+import java.util.Date;
+import java.util.Map;
+
 /**
  * This interface declares a snapshot of an instance of IStat that was taken at any time.
  * It doesn't declare the mandatory content conversion methods anylonger.
@@ -41,4 +44,8 @@ package net.java.dev.moskito.core.producers;
  * @author dvayanu
  */
 public interface IStatsSnapshot {
+	String getName();
+	Date getDateCreated();
+
+	public Map<String, Number> getProperties();
 }
