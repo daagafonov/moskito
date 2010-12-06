@@ -1,0 +1,15 @@
+{
+
+    app-path: "/mui/";
+    list-servers: ["blackstone2","blackstone3"];
+    blackstone1: "http://localhost:8080";
+    blackstone2: "http://localhost:8082";
+    blackstone3: "http://localhost:8086";
+
+    //	TEST1: "http://test.anotheria.net";
+	//	PROD1: "http://prod.anotheria.net:8080";
+	//	INFRA1: "http://infra.anotheria.net:9080";
+	//	PROD2: "http://bolbat.net";
+	//	extapi.parship.de : "http://extapi.parship.de";
+	//	extapi.test: "http://extapi123abc456.parship.de"
+}

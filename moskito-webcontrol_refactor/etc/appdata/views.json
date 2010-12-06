@@ -1,0 +1,33 @@
+{
+	baseURL: "mskShowAllProducers.xml?pForward=xml",
+	baseColumn : {
+		attribute: "base";
+		path : "/producers/decorator[@name='*']/producer[@id='*']/values/value[@name='*']/text()",
+		name: "Base",
+		type: "field",
+		class : "int",
+		visible: true,
+		guard: "net.java.dev.moskito.webcontrol.guards.TrafficLightsGuard",
+		guardRules: "..400,400..500,500..",
+		format: "#,##0.0#",
+		total: "SUM"
+	},
+
+     views : [ { 
+        name : "ProductStats",
+        columns : [
+            {
+                attribute: "decoratorName_testProducerID_caption",
+                name: "decoratorName_testProducerID_caption",
+                type: "field",
+                class: "int",
+                visible: true,
+                path: "/producers/decorator[@name='decoratorName']/producer[@id='testProducerID']/values/value[@name='caption']/text()",
+                guard: "net.java.dev.moskito.webcontrol.guards.TrafficLightsGuard",
+                total: "SUM",
+                format: "#,##0.0#",
+            },
+        ]},
+    ]
+
+}
