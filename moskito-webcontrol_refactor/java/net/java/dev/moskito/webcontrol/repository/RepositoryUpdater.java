@@ -10,6 +10,7 @@ import net.java.dev.moskito.webcontrol.ui.beans.PatternWithName;
 import org.apache.log4j.Logger;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
 
 import javax.xml.xpath.XPath;
 import javax.xml.xpath.XPathConstants;
@@ -74,25 +75,15 @@ public class RepositoryUpdater {
 	}
 
 	/**
-	 * Initialize and starts repository updater with given period, if period of time is null then
-	 * default value will be used.
-	 * @param aPeriod period of time in milliseconds between successive task executions.
-	 */
-	public static void init(Long aPeriod){
-		getInstance().start(aPeriod);
-	}
-
-	/**
 	 * Starts repository updater with given period, if period of time is null then
 	 * default value will be used.
 	 * @param aPeriod period of time in milliseconds between successive task executions.
 	 */
 	public void start(Long aPeriod){
-		//System.out.println("start");
 		stop();
-		timer = new Timer("MoskitoRepositoryUpdater");
+		timer = new Timer("MoskitoRepositoryUpdater", true);
 		period = (aPeriod==null) ? DEFAULT_PERIOD : aPeriod;
-		timer.schedule(new CheckTask(), period, period);
+		timer.schedule(new CheckTask(), 1, period);
 	}
 
 	/**
@@ -109,10 +100,10 @@ public class RepositoryUpdater {
 	/**
 	 * Retrieves xml form each server, parse them and puts data into repository.
 	 */
-	public void update() {//TODO threadsafity
+	public void update() {//TODO thread sefity
 		List<SourceConfiguration> sources = ConfigurationRepository.INSTANCE.getSources();
 		for (SourceConfiguration source : sources) {
-			if (!"Totals".equalsIgnoreCase(source.getName())) {
+			if (!ConfigurationRepository.TOTALS_SOURCE_NAME.equalsIgnoreCase(source.getName())) {
 				for (String name : ConfigurationRepository.INSTANCE.getIntervalsNames()) {
 					try {
 						FeedGetter getter = new HttpGetter();
@@ -167,7 +158,7 @@ public class RepositoryUpdater {
 	}
 
 	private void calculateTotals(String containerName) {
-		Snapshot snapshot = new Snapshot(new SnapshotSource("Totals"));
+		Snapshot snapshot = new Snapshot(new SnapshotSource(ConfigurationRepository.TOTALS_SOURCE_NAME));
 
 		List<String> viewNames = ConfigurationRepository.INSTANCE.getViewNames();
 		for (String viewName : viewNames) {
@@ -178,7 +169,7 @@ public class RepositoryUpdater {
 					List<Attribute> attrs = new ArrayList<Attribute>();
 					List<SourceConfiguration> sources = ConfigurationRepository.INSTANCE.getSources();
 					for (SourceConfiguration source : sources) {
-						if (!"Totals".equalsIgnoreCase(source.getName())) {
+						if (!ConfigurationRepository.TOTALS_SOURCE_NAME.equalsIgnoreCase(source.getName())) {
 							Snapshot ss;
 							try {
 								ss = Repository.INSTANCE.getSnapshot(containerName, new SnapshotSource(source.getName()));
@@ -204,18 +195,31 @@ public class RepositoryUpdater {
 		Repository.INSTANCE.addSnapshot(containerName, snapshot);
 	}
 
-
+	/**
+	 * Adds snapshot to local repository.
+	 * @param source name of server from which we should take snapshot(see servers.json).
+	 * @param doc remote snapshot.
+	 * @param containerName container for snapshot (see intervals.json).
+	 */
 	public void fillRepository(SourceConfiguration source, Document doc, String containerName) {
 		Repository.INSTANCE.addSnapshot(containerName, createSnapshot(source.getName(), doc));
 	}
 
+	/**
+	 * Creates local snapshot from remote server.
+	 * @param name name of server from which we should take snapshot(see servers.json).
+	 * @param doc snapshot object to parse.
+	 * @return created snapshot.
+	 */
 	private Snapshot createSnapshot(String name, Document doc) {
+
 		Snapshot snapshot = new Snapshot(new SnapshotSource(name));
 		List<String> viewNames = ConfigurationRepository.INSTANCE.getViewNames();
 		for (String viewName : viewNames) {
 			ViewConfiguration viewConfig = ConfigurationRepository.INSTANCE.getView(viewName);
 			List<ViewField> fields = viewConfig.getFields();
 
+			//TODO explain pls this block
 			ViewField[] fs = fields.toArray(new ViewField[fields.size()]);
 			for (int j = 0; j < fs.length; j++) {
 				ViewField field = fs[j];

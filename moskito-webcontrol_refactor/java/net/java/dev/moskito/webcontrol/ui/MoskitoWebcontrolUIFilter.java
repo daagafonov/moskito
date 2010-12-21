@@ -24,7 +24,7 @@ public class MoskitoWebcontrolUIFilter extends MAFFilter {
 			pathToImages = pathToImagesParameter;
 		config.getServletContext().setAttribute("mskPathToImages", pathToImages);
 
-		RepositoryUpdater.init(null);
+		RepositoryUpdater.getInstance().start(60*1000L);
 	
 
 		// TODO delete later
