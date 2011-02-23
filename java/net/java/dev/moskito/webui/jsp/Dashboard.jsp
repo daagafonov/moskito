@@ -42,7 +42,7 @@
         <option class="create">Create dashboard</option>
         <!--<option disabled selected="selected"></option>-->
         <ano:iterate name="dashboards" id="dashboard">
-            <option <ano:equal name="dashboard" value="${selectedDashboardName}">selected="selected"</ano:equal>><ano:write name="dashboar" property="name"/></option>
+            <option <ano:equal name="dashboard" property="name" value="${selectedDashboardName}">selected="selected"</ano:equal>><ano:write name="dashboard" property="name"/></option>
         </ano:iterate>
     </select>
 
