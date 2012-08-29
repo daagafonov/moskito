@@ -9,13 +9,8 @@ import net.java.dev.moskito.webui.action.ForceIntervalUpdateAction;
 import net.java.dev.moskito.webui.action.GetChartDataAction;
 import net.java.dev.moskito.webui.action.GetChartMetaDataAction;
 import net.java.dev.moskito.webui.action.InspectProducerAction;
-import net.java.dev.moskito.webui.action.accumulators.CreateAccumulatorAction;
-import net.java.dev.moskito.webui.action.accumulators.DeleteAccumulatorAction;
-import net.java.dev.moskito.webui.action.accumulators.ShowAccumulatorAction;
-import net.java.dev.moskito.webui.action.accumulators.ShowAccumulatorsAction;
 import net.java.dev.moskito.webui.action.ShowAllProducersAction;
 import net.java.dev.moskito.webui.action.ShowChartsAction;
-import net.java.dev.moskito.webui.action.ShowDashboardAction;
 import net.java.dev.moskito.webui.action.ShowExplanationsAction;
 import net.java.dev.moskito.webui.action.ShowJourneyAction;
 import net.java.dev.moskito.webui.action.ShowJourneyCallAction;
@@ -24,10 +19,19 @@ import net.java.dev.moskito.webui.action.ShowProducerAction;
 import net.java.dev.moskito.webui.action.ShowProducersForCategoryAction;
 import net.java.dev.moskito.webui.action.ShowProducersForSubsystemAction;
 import net.java.dev.moskito.webui.action.ShowRecordedUseCaseAction;
+import net.java.dev.moskito.webui.action.ShowUseCasesAction;
+import net.java.dev.moskito.webui.action.accumulators.CreateAccumulatorAction;
+import net.java.dev.moskito.webui.action.accumulators.DeleteAccumulatorAction;
+import net.java.dev.moskito.webui.action.accumulators.ShowAccumulatorAction;
+import net.java.dev.moskito.webui.action.accumulators.ShowAccumulatorsAction;
+import net.java.dev.moskito.webui.action.dashboards.BaseDashboardAction;
+import net.java.dev.moskito.webui.action.dashboards.CreateDashboardAction;
+import net.java.dev.moskito.webui.action.dashboards.DeleteDashboardAction;
+import net.java.dev.moskito.webui.action.dashboards.EditDashboardAction;
+import net.java.dev.moskito.webui.action.dashboards.RenameDashboardAction;
 import net.java.dev.moskito.webui.action.thresholds.CreateThresholdAction;
 import net.java.dev.moskito.webui.action.thresholds.DeleteThresholdAction;
 import net.java.dev.moskito.webui.action.thresholds.ShowThresholdsAction;
-import net.java.dev.moskito.webui.action.ShowUseCasesAction;
 
 /**
  * Mappings configurator for MoSKito project for the AnoMaf framework.
@@ -39,17 +43,26 @@ public class MoskitoMappingsConfigurator implements ActionMappingsConfigurator{
 	@Override public void configureActionMappings(ActionMappings mappings){
 		mappings.addForward("mskCSS", "/net/java/dev/moskito/webui/jsp/CSS.jsp");
 
-		mappings.addMapping("mskDashBoard", ShowDashboardAction.class,
-				new ActionForward("html", "/net/java/dev/moskito/webui/jsp/Dashboard.jsp"),
-				new ActionForward("xml", "/net/java/dev/moskito/webui/jsp/ProducersXML.jsp"),
-				new ActionForward("csv", "/net/java/dev/moskito/webui/jsp/ProducersCSV.jsp"),
-				new ActionForward("json", "/net/java/dev/moskito/webui/jsp/ProducersJSON.jsp")
+		mappings.addMapping("mskDashboard", BaseDashboardAction.class,
+				new ActionForward("html", "/net/java/dev/moskito/webui/jsp/Dashboard.jsp")//,
+//				new ActionForward("xml", "/net/java/dev/moskito/webui/jsp/ProducersXML.jsp"),
+//				new ActionForward("csv", "/net/java/dev/moskito/webui/jsp/ProducersCSV.jsp"),
+//				new ActionForward("json", "/net/java/dev/moskito/webui/jsp/ProducersJSON.jsp")
 		);
+		//TODO add aliases for csv,xml,json
+//		mappings.addAlias("mskDashBoard.csv", "mskDashBoard");
+//		mappings.addAlias("mskDashBoard.xml", "mskDashBoard");
+//		mappings.addAlias("mskDashBoard.json", "mskDashBoard");
 
-		mappings.addAlias("mskDashBoard.csv", "mskDashBoard");
-		mappings.addAlias("mskDashBoard.xml", "mskDashBoard");
-		mappings.addAlias("mskDashBoard.json", "mskDashBoard");
-
+		mappings.addMapping("mskDashboardDelete", DeleteDashboardAction.class,
+				new CommandRedirect("redirect", "mskDashboard"));
+		mappings.addMapping("mskDashboardCreate", CreateDashboardAction.class,
+				new CommandRedirect("redirect", "mskDashboard"));
+		mappings.addMapping("mskDashboardEdit", EditDashboardAction.class,
+				new CommandRedirect("redirect", "mskDashboard"));
+		mappings.addMapping("mskDashboardRename", RenameDashboardAction.class,
+				new CommandRedirect("redirect", "mskDashboard"));
+		
 		mappings.addMapping("mskShowAllProducers", ShowAllProducersAction.class,
 				new ActionForward("html", "/net/java/dev/moskito/webui/jsp/Producers.jsp"),
 				new ActionForward("xml", "/net/java/dev/moskito/webui/jsp/ProducersXML.jsp"),

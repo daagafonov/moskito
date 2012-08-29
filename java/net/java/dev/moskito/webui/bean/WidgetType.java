@@ -20,5 +20,12 @@ public enum WidgetType {
 	public String getType() {
 		return type;
 	}
+	
+	public static WidgetType getTypeByName(String name, WidgetType defType) {
+		for (WidgetType type : values())
+			if (type.getType().equals(name))
+				return type;
+		return defType;
+	}
 
 }

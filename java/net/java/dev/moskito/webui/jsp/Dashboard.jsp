@@ -46,7 +46,7 @@
         </ano:iterate>
     </select>
 
-    <a href="#" class="edit dash">Edit</a>
+    <a href="#" class="edit dash" <ano:notPresent name="${selectedDashboardName}">style="display:none;"</ano:notPresent>>Edit</a>
     <input type="button" value="Create widget" class="create_wdgt" <ano:iF test="${!isCanAddWidget}">style="display:none;"</ano:iF> />
 
     <div class="clear"></div>
@@ -183,11 +183,12 @@
 
 <!-- Edit dashboard name overlay -->
 <div class="edit_dash_overlay" style="display:none;">
-    <form action="mskDashBoard" class="edit_dash_form" method="post">
+    <form action="mskDashboardRename" class="edit_dash_form" method="post">
 
         <h2>Edit dashboard name</h2>
         <label for="name">Name:</label>
-        <input type="text" name="dashboard" value="" id="name"/>
+        <input type="text" name="dashboardName" value="" id="name"/>
+        <input type="hidden" name="dashboardOldName" value="${dashboard.name}"/>
 
         <div class="clear"></div>
         <div class="flr">
@@ -200,10 +201,10 @@
 
 <!-- Create dashboard overlay -->
 <div class="create_dash_overlay" style="display:none;">
-    <form action="mskDashBoard" class="edit_dash_form" method="post">
+    <form action="mskDashboardCreate" class="edit_dash_form" method="post">
         <h2>Create dashboard</h2>
         <label for="name">Name:</label>
-        <input type="text" name="dashboard" value="" id="name"/>
+        <input type="text" name="dashboardName" value="" id="name"/>
 
         <div class="clear"></div>
         <div class="flr">

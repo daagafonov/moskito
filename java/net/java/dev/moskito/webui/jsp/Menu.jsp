@@ -101,6 +101,9 @@
 						</div>
 						<div class="over_color"><div><!-- --></div></div>
                     </li>
+                    <li <ano:equal name="currentNaviItem" value="DASHBOARD">class="active"</ano:equal>>
+                        <a href="mskDashBoard">Dashboards</a>
+                    </li>
 					
 				</ul>
 				<div class="right"></div>
