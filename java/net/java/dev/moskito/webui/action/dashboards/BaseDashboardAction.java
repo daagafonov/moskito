@@ -58,80 +58,77 @@ public class BaseDashboardAction extends BaseMoskitoUIAction {
 	private static final String DASHBOARDS_SESSION_ATTR = "dashboards";
 	
 	protected static final String DASHBOARD_NAME = "dashboardName";
-
+	
 	@Override
 	public ActionCommand execute(ActionMapping mapping, FormBean formBean, HttpServletRequest req, HttpServletResponse res) throws JSONException {
+		printReq(req);
+		String selectedDashboardName = req.getParameter(DASHBOARD_PARAMETER_NAME);
+		DashboardBean dash = null;
+		DashboardsConfig dashes = getDashboards(req);
 
-		System.out.println("REQ in ");
-		String debug = "";
-		try {
-			@SuppressWarnings("unchecked") Enumeration<String> en = req.getParameterNames();
-			while (en.hasMoreElements()) {
-				String p = "" + en.nextElement();
-				if (debug.length() > 0)
-					debug += ", ";
-				debug += p + "= " + req.getParameter(p);
-			}
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-		System.out.println("--> " + debug);
-
-		String selectedDashboardName = getSelectedDashboardNameFromSession(req);
-
-//		if (!StringUtils.isEmpty(req.getParameter(DELETE_WIDGET_PARAMETER_NAME))) {
-//			deleteWidget(req, req.getParameter(DELETE_WIDGET_PARAMETER_NAME), selectedDashboardName);
-//			saveDashboardsToCookie(req, res);
-//		}
-
-		List<ProducerDecoratorBean> producerDecoratorBeans = getDecoratedProducers(req, getAPI().getAllProducers(), new HashMap<String, GraphDataBean>());
-		refreshWidgetsData(req, selectedDashboardName, producerDecoratorBeans);
-
-
-		if (/*widgets.isEmpty() || */req.getParameter(RELOAD_PARAMETER_NAME) != null) {
-			try {
-				loadDashboardsFromCookie(producerDecoratorBeans, req);
-			} catch (JSONException e) {
-				System.out.println(e);
-				//todo handle this case and log
-			}
+		if (StringUtils.isEmpty(selectedDashboardName)) {
+			dash = dashes.getSelectedDashboard();
+			if (dash != null)
+				selectedDashboardName = dash.getName();
 		} else {
-			@SuppressWarnings("unchecked")
-			List<String> configAttributes = Collections.list(req.getParameterNames());
-			configAttributes.remove(WIDGET_NAME_PARAMETER_NAME);
-			configAttributes.remove(WIDGET_TYPE_PARAMETER_NAME);
-
-			List<ProducerGroup> widgetContent = getWidgetContent(producerDecoratorBeans, configAttributes);
-			DashboardWidgetBean widget = new DashboardWidgetBean(req.getParameter(WIDGET_NAME_PARAMETER_NAME));
-			widget.setType(WidgetType.getTypeByName(req.getParameter(WIDGET_TYPE_PARAMETER_NAME), WidgetType.TABLE));
-			widget.setConfigAttributes(configAttributes);
-			
-			putWidgetToDashboard(req, selectedDashboardName, widget, widgetContent);
-
-			saveDashboardsToCookie(req, res);
+			try {
+				dashes.setSelectedDashboard(selectedDashboardName);
+				dash = dashes.getSelectedDashboard();
+			} catch (IllegalArgumentException e) {
+				//TODO log wrong dashboard name
+			}
 		}
 
-
-//		List<DashboardWidgetBean> widgetsLeft = new ArrayList<DashboardWidgetBean>();
-//		List<DashboardWidgetBean> widgetsRight = new ArrayList<DashboardWidgetBean>();
-//
-		DashboardBean selectedDashboard = getDashboardByName(req, selectedDashboardName);
-//		if (selectedDashboard != null && selectedDashboard.getWidgets() != null) {
-////			for (DashboardWidgetBean widget : selectedDashboard.getWidgets())
-////				if (widgetsLeft.size() <= widgetsRight.size())
-////					widgetsLeft.add(widget);
-////				else
-////					widgetsRight.add(widget);
-//		}
+		if (dash != null) {
+			
+			List<ProducerDecoratorBean> producerDecoratorBeans = getDecoratedProducers(req, getAPI().getAllProducers(), new HashMap<String, GraphDataBean>());
+			refreshWidgetsData(req, selectedDashboardName, producerDecoratorBeans);
 
 
-		req.setAttribute("decorators", producerDecoratorBeans);
-		req.setAttribute("dashboards", getDashboardsFromSession(req));
-		req.setAttribute("selectedDashboardName", selectedDashboardName);
-		//req.setAttribute("widgets", widgets);
-		if (selectedDashboard != null) {
-			req.setAttribute("widgetsLeft", selectedDashboard.getWidgetsLeft());
-			req.setAttribute("widgetsRight", selectedDashboard.getWidgetsRight());
+			if (/*widgets.isEmpty() || */req.getParameter(RELOAD_PARAMETER_NAME) != null) {
+				try {
+					CookiePersistence.loadDashboardsFromCookie(/*producerDecoratorBeans, */req);
+				} catch (JSONException e) {
+					System.out.println(e);
+					//todo handle this case and log
+				}
+			} else {
+				@SuppressWarnings("unchecked")
+				List<String> configAttributes = Collections.list(req.getParameterNames());
+				configAttributes.remove(WIDGET_NAME_PARAMETER_NAME);
+				configAttributes.remove(WIDGET_TYPE_PARAMETER_NAME);
+
+				List<ProducerGroup> widgetContent = getWidgetContent(producerDecoratorBeans, configAttributes);
+				DashboardWidgetBean widget = new DashboardWidgetBean(req.getParameter(WIDGET_NAME_PARAMETER_NAME));
+				widget.setType(WidgetType.getTypeByName(req.getParameter(WIDGET_TYPE_PARAMETER_NAME), WidgetType.TABLE));
+				widget.setConfigAttributes(configAttributes);
+
+				putWidgetToDashboard(req, selectedDashboardName, widget, widgetContent);
+
+				CookiePersistence.saveDashboardsToCookie(req, res);//TODO is this needed?
+			}
+
+
+			//		List<DashboardWidgetBean> widgetsLeft = new ArrayList<DashboardWidgetBean>();
+			//		List<DashboardWidgetBean> widgetsRight = new ArrayList<DashboardWidgetBean>();
+			//		DashboardBean selectedDashboard = getDashboardByName(req, selectedDashboardName);
+			//		if (selectedDashboard != null && selectedDashboard.getWidgets() != null) {
+			////			for (DashboardWidgetBean widget : selectedDashboard.getWidgets())
+			////				if (widgetsLeft.size() <= widgetsRight.size())
+			////					widgetsLeft.add(widget);
+			////				else
+			////					widgetsRight.add(widget);
+			//		}
+
+
+			req.setAttribute("decorators", producerDecoratorBeans);
+			req.setAttribute("dashboards", getDashboards(req));
+			req.setAttribute("selectedDashboardName", selectedDashboardName);
+			//req.setAttribute("widgets", widgets);
+//			if (selectedDashboard != null) {
+				req.setAttribute("widgetsLeft", dash.getWidgetsLeft());
+				req.setAttribute("widgetsRight", dash.getWidgetsRight());
+//			}
 		}
 		//req.setAttribute("graphDatas", graphData.values());
 		req.setAttribute("pageTitle", "Dashboard");
@@ -164,7 +161,7 @@ public class BaseDashboardAction extends BaseMoskitoUIAction {
 //		}
 //
 //		return selectedDashBoardName;
-		DashboardBean dash = getDashboardsFromSession(req).getSelectedDashboard();
+		DashboardBean dash = getDashboards(req).getSelectedDashboard();
 		return dash == null ? null : dash.getName(); 
 	}
 	
@@ -175,12 +172,20 @@ public class BaseDashboardAction extends BaseMoskitoUIAction {
 	 * @param req
 	 * @return dashboards
 	 */
-	protected DashboardsConfig getDashboardsFromSession(HttpServletRequest req) {
+	protected static DashboardsConfig getDashboards(HttpServletRequest req) {
 		Object dashboards = req.getSession().getAttribute(DASHBOARDS_SESSION_ATTR);
 		if (dashboards == null) {
-			DashboardsConfig dashboardsNew = new DashboardsConfig();
-			req.getSession().setAttribute(DASHBOARDS_SESSION_ATTR, dashboardsNew);
-			return dashboardsNew;
+			try {
+				CookiePersistence.loadDashboardsFromCookie(req);
+				dashboards = req.getSession().getAttribute(DASHBOARDS_SESSION_ATTR);
+			} catch (JSONException e) {
+				e.printStackTrace();// TODO Auto-generated catch block
+			}
+			if (dashboards == null) {
+				DashboardsConfig dashboardsNew = new DashboardsConfig();
+				req.getSession().setAttribute(DASHBOARDS_SESSION_ATTR, dashboardsNew);
+				return dashboardsNew;
+			}
 		}
 
 		if (dashboards instanceof DashboardsConfig)
@@ -189,96 +194,21 @@ public class BaseDashboardAction extends BaseMoskitoUIAction {
 		throw new IllegalArgumentException("Wrong attribute in session");
 	}
 
+
 	/**
-	 * Put dashboard to sessions dashboard collection.
+	 * Refreshes data for all widgets in specified dashboard.
 	 *
 	 * @param req
-	 * @param dashboardBean dashboard to put
+	 * @param dashboardName		  name of dashboard that should be refreshed
+	 * @param producerDecoratorBeans data for widgets
 	 */
-//	protected void putDashboardToSession(HttpServletRequest req, DashboardBean dashboardBean) {
-//		getDashboardsFromSession(req).add(dashboardBean);//TODO do we need one-liner here?
-//	}
-
-	/**
-	 * Perform saving all dashboards into cookie.
-	 *
-	 * @param req
-	 * @param res
-	 */
-	protected void saveDashboardsToCookie(HttpServletRequest req, HttpServletResponse res) throws JSONException {
-
-		JSONObject jsonDashboards = new JSONObject();
-		for (DashboardBean dashboard : getDashboardsFromSession(req)) {
-			jsonDashboards.put(dashboard.getName(), dashboard.toJSON());
-		}
-
-
-		Cookie cookie = null;
-		try {
-			cookie = new Cookie(DASHBOARDS_COOKIE_NAME, URLEncoder.encode( compressString(jsonDashboards.toString()), "UTF-8"));
-		} catch (IOException e) {
-			System.out.println(e);
-		}
-
-		int cookieMaxAge = Long.valueOf(TimeUnit.YEAR.getMillis() / 1000).intValue();
-		cookie.setMaxAge(cookieMaxAge);
-		cookie.setPath(req.getContextPath());
-
-		res.addCookie(cookie);
+	private void refreshWidgetsData(HttpServletRequest req, String dashboardName, List<ProducerDecoratorBean> producerDecoratorBeans) {
+		for (DashboardBean dashboard : getDashboards(req))
+			if (dashboard.getName().equals(dashboardName)) {
+				for (DashboardWidgetBean widget : dashboard.getWidgets())
+					widget.setProducerGroups(getWidgetContent(producerDecoratorBeans, widget.getConfigAttributes()));
+			}
 	}
-
-	/**
-	 * Compresses data using zip deflater.
-	 *
-	 * @param data data to compress
-	 * @return string representation of compressed data, encoded with BASE64Encoder
-	 * @throws IOException
-	 */
-	private static String compressString(String data) throws IOException {
-		byte[] input = data.getBytes("UTF-8");
-		Deflater df = new Deflater();
-		df.setLevel(Deflater.BEST_COMPRESSION);
-		df.setInput(input);
-
-		ByteArrayOutputStream baos = new ByteArrayOutputStream(input.length);
-		df.finish();
-		byte[] buff = new byte[1024];
-		while (!df.finished()) {
-			int count = df.deflate(buff);
-			baos.write(buff, 0, count);
-		}
-		baos.close();
-		byte[] output = baos.toByteArray();
-		
-		return Base64.encodeBase64String(output);
-	}
-
-	/**
-	 * Decompresses data.
-	 *
-	 * @param data data to decompress
-	 * @return decompressed string
-	 * @throws IOException
-	 * @throws DataFormatException
-	 */
-	private static String decompressString(String data) throws IOException, DataFormatException {
-		byte[] input = Base64.decodeBase64(data);
-		
-		Inflater ifl = new Inflater();
-		ifl.setInput(input);
-
-		ByteArrayOutputStream baos = new ByteArrayOutputStream(input.length);
-		byte[] buff = new byte[1024];
-		while (!ifl.finished()) {
-			int count = ifl.inflate(buff);
-			baos.write(buff, 0, count);
-		}
-		baos.close();
-		byte[] output = baos.toByteArray();
-
-		return new String(output, "UTF-8");
-	}
-
 	
 	/**
 	 * Creates content for widget. Content - is a representation of html form with selected properties and loaded values.
@@ -340,72 +270,6 @@ public class BaseDashboardAction extends BaseMoskitoUIAction {
 	}
 
 	/**
-	 * Loads dashboards with widgets from cookies.
-	 *
-	 * @param producerDecoratorBeans data for widgets
-	 * @param req					HttpServletRequest
-	 * @throws JSONException
-	 */
-	private void loadDashboardsFromCookie(List<ProducerDecoratorBean> producerDecoratorBeans, HttpServletRequest req) throws JSONException {
-		Cookie[] cookies = req.getCookies();
-
-		if (cookies == null)
-			return;
-		String cookieValue = null;
-
-		for (Cookie cookie : cookies)
-			if (cookie.getName().equals(DASHBOARDS_COOKIE_NAME)) {
-				cookieValue = cookie.getValue();
-				break;
-			}
-
-		if (cookieValue == null)
-			return;
-
-		JSONObject jsonDashboards = null;
-		try {
-			jsonDashboards = new JSONObject(decompressString(URLDecoder.decode(cookieValue, "UTF-8")));
-		} catch (IOException e) {
-			//TODO log here
-			System.out.println(e);
-		} catch (DataFormatException e) {
-			System.out.println(e);
-			//TODO log here
-		}
-
-		String[] dashboardNames = JSONObject.getNames(jsonDashboards);
-		if (dashboardNames == null)
-			return;
-
-		for (String dashboardName : dashboardNames) {
-			JSONArray jsonWidgets = jsonDashboards.getJSONArray(dashboardName);
-
-			for (int i = 0; i < jsonWidgets.length(); i++) {
-				JSONObject jsonWidget = jsonWidgets.getJSONObject(i);
-				
-				DashboardWidgetBean widget = DashboardWidgetBean.fromJson(jsonWidget);
-
-				putWidgetToDashboard(req, dashboardName, widget, getWidgetContent(producerDecoratorBeans, widget.getConfigAttributes()));
-			}
-		}
-	}
-
-	/**
-	 * Refreshes data for all widgets in specified dashboard.
-	 *
-	 * @param req
-	 * @param dashboardName		  name of dashboard that should be refreshed
-	 * @param producerDecoratorBeans data for widgets
-	 */
-	private void refreshWidgetsData(HttpServletRequest req, String dashboardName, List<ProducerDecoratorBean> producerDecoratorBeans) {
-		for (DashboardBean dashboard : getDashboardsFromSession(req))
-			if (dashboard.getName().equals(dashboardName)) {
-				for (DashboardWidgetBean widget : dashboard.getWidgets())
-					widget.setProducerGroups(getWidgetContent(producerDecoratorBeans, widget.getConfigAttributes()));
-			}
-	}
-
-	/**
 	 * Puts widget into specified dashboard. If specified dashboard is absent it wil be created automatically.
 	 *
 	 * @param req
@@ -446,7 +310,7 @@ public class BaseDashboardAction extends BaseMoskitoUIAction {
 	 * @return dash board with specified name
 	 */
 	private DashboardBean getDashboardByName(HttpServletRequest req, String dashboardName) {
-		for (DashboardBean dashboard : getDashboardsFromSession(req))
+		for (DashboardBean dashboard : getDashboards(req))
 			if (dashboard.getName().equals(dashboardName))
 				return dashboard;
 
@@ -487,6 +351,167 @@ public class BaseDashboardAction extends BaseMoskitoUIAction {
 	}
 	protected void saveNextWidgetId(HttpServletRequest req, long id) {
 		req.getSession().setAttribute(NEXT_WIDGET_ID_ATTR, id);
+	}
+	
+	@Deprecated //TODO delete this method
+	private static void printReq(HttpServletRequest req) {
+		System.out.println("REQ in ");
+		String debug = "";
+		try {
+			@SuppressWarnings("unchecked") Enumeration<String> en = req.getParameterNames();
+			while (en.hasMoreElements()) {
+				String p = "" + en.nextElement();
+				if (debug.length() > 0)
+					debug += ", ";
+				debug += p + "= " + req.getParameter(p);
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		System.out.println("--> " + debug);
+	}
+	
+	
+	protected static class CookiePersistence {
+		/**
+		 * Perform saving all dashboards into cookie.
+		 *
+		 * @param req
+		 * @param res
+		 */
+		protected static void saveDashboardsToCookie(HttpServletRequest req, HttpServletResponse res) throws JSONException {
+
+			JSONObject jsonDashboards = new JSONObject();
+			DashboardsConfig config = getDashboards(req);
+
+			if (config.getSelectedDashboard() != null) {
+				jsonDashboards.put("selectedDash", config.getSelectedDashboard().getName());
+			}
+			for (DashboardBean dashboard : config) {
+				jsonDashboards.put(dashboard.getName(), dashboard.toJSON());
+			}
+
+
+			Cookie cookie = null;
+			try {
+				cookie = new Cookie(DASHBOARDS_COOKIE_NAME, URLEncoder.encode( compressString(jsonDashboards.toString()), "UTF-8"));
+			} catch (IOException e) {
+				System.out.println(e);
+			}
+
+			int cookieMaxAge = Long.valueOf(TimeUnit.YEAR.getMillis() / 1000).intValue();
+			cookie.setMaxAge(cookieMaxAge);
+			cookie.setPath(req.getContextPath());
+
+			res.addCookie(cookie);
+		}
+
+		/**
+		 * Loads dashboards with widgets from cookies.
+		 *
+		 * @param producerDecoratorBeans data for widgets
+		 * @param req					HttpServletRequest
+		 * @throws JSONException
+		 */
+		protected static void loadDashboardsFromCookie(/*List<ProducerDecoratorBean> producerDecoratorBeans,*/ HttpServletRequest req) throws JSONException {
+
+			DashboardsConfig dashes = new DashboardsConfig();
+			req.getSession().setAttribute(DASHBOARDS_SESSION_ATTR, dashes);
+
+			Cookie[] cookies = req.getCookies();
+			if (cookies == null)
+				return;
+			String cookieValue = null;
+
+			for (Cookie cookie : cookies)
+				if (cookie.getName().equals(DASHBOARDS_COOKIE_NAME)) {
+					cookieValue = cookie.getValue();
+					break;
+				}
+
+			if (cookieValue == null)
+				return;
+
+			JSONObject jsonDashboards = null;
+			try {
+				jsonDashboards = new JSONObject(decompressString(URLDecoder.decode(cookieValue, "UTF-8")));
+			} catch (IOException e) {
+				System.out.println(e);			//TODO log here
+			} catch (DataFormatException e) {
+				System.out.println(e);			//TODO log here
+			}
+
+
+			if (jsonDashboards != null) {
+				String[] dashboardNames = JSONObject.getNames(jsonDashboards);
+				if (dashboardNames == null || dashboardNames.length == 0)
+					return;
+				
+				String selectedDash = jsonDashboards.getString("selectedDash");
+
+				for (String dashboardName : dashboardNames) {
+					JSONObject jsonDash = jsonDashboards.getJSONObject(dashboardName);
+					DashboardBean dash = DashboardBean.fromJSON(dashboardName, jsonDash);
+					dashes.add(dash);
+					if (dashboardName.equals(selectedDash)) {
+						dashes.setSelectedDashboard(dash);
+					}
+				}
+			}
+		}
+
+		/**
+		 * Compresses data using zip deflater.
+		 *
+		 * @param data data to compress
+		 * @return string representation of compressed data, encoded with BASE64Encoder
+		 * @throws IOException
+		 */
+		private static String compressString(String data) throws IOException {
+			byte[] input = data.getBytes("UTF-8");
+			Deflater df = new Deflater();
+			df.setLevel(Deflater.BEST_COMPRESSION);
+			df.setInput(input);
+
+			ByteArrayOutputStream baos = new ByteArrayOutputStream(input.length);
+			df.finish();
+			byte[] buff = new byte[1024];
+			while (!df.finished()) {
+				int count = df.deflate(buff);
+				baos.write(buff, 0, count);
+			}
+			baos.close();
+			byte[] output = baos.toByteArray();
+
+			return Base64.encodeBase64String(output);
+		}
+
+		/**
+		 * Decompresses data.
+		 *
+		 * @param data data to decompress
+		 * @return decompressed string
+		 * @throws IOException
+		 * @throws DataFormatException
+		 */
+		private static String decompressString(String data) throws IOException, DataFormatException {
+			byte[] input = Base64.decodeBase64(data);
+
+			Inflater ifl = new Inflater();
+			ifl.setInput(input);
+
+			ByteArrayOutputStream baos = new ByteArrayOutputStream(input.length);
+			byte[] buff = new byte[1024];
+			while (!ifl.finished()) {
+				int count = ifl.inflate(buff);
+				baos.write(buff, 0, count);
+			}
+			baos.close();
+			byte[] output = baos.toByteArray();
+
+			return new String(output, "UTF-8");
+		}
+
 	}
 
 

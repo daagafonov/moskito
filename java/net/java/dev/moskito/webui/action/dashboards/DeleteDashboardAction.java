@@ -13,16 +13,14 @@ import org.json.JSONException;
 
 public class DeleteDashboardAction extends BaseDashboardAction {
 	
-	private static final String DASHBOARD_NAME = "name";
-
 	@Override
 	public ActionCommand execute(ActionMapping mapping, FormBean formBean, HttpServletRequest req, HttpServletResponse res) throws JSONException {
 		
-		String dashboardName = req.getParameter(DASHBOARD_NAME);
+		String dashboardName = req.getParameter(DASHBOARD_PARAMETER_NAME);
 		if (!StringUtils.isEmpty(dashboardName)) {
-			DashboardsConfig dashboards = getDashboardsFromSession(req);
+			DashboardsConfig dashboards = getDashboards(req);
 			if (dashboards.removeByName(dashboardName)) {
-				saveDashboardsToCookie(req, res);
+				CookiePersistence.saveDashboardsToCookie(req, res);
 			} else {
 				//TODO log it
 			}

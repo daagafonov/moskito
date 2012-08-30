@@ -7,6 +7,7 @@ import net.anotheria.maf.action.ActionCommand;
 import net.anotheria.maf.action.ActionMapping;
 import net.anotheria.maf.bean.FormBean;
 import net.anotheria.util.StringUtils;
+import net.java.dev.moskito.webui.action.dashboards.BaseDashboardAction.CookiePersistence;
 import net.java.dev.moskito.webui.bean.dashboard.DashboardBean;
 import net.java.dev.moskito.webui.bean.dashboard.DashboardsConfig;
 
@@ -25,11 +26,11 @@ public class RenameDashboardAction extends BaseDashboardAction {
 		String dashboardName = req.getParameter(DASHBOARD_OLD_NAME);
 		String newName = req.getParameter(DASHBOARD_NAME);
 		if (!StringUtils.isEmpty(dashboardName)&& !StringUtils.isEmpty(newName)) {
-			DashboardsConfig dashboards = getDashboardsFromSession(req);
+			DashboardsConfig dashboards = getDashboards(req);
 			DashboardBean bean = dashboards.getDashboard(dashboardName);
 			if (bean != null) {
 				bean.setName(newName);
-				saveDashboardsToCookie(req, res);
+				CookiePersistence.saveDashboardsToCookie(req, res);
 			} else {
 				//TODO log this!
 			}

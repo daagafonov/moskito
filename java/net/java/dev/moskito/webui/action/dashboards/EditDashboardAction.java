@@ -1,7 +1,5 @@
 package net.java.dev.moskito.webui.action.dashboards;
 
-import java.util.List;
-
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
@@ -10,7 +8,7 @@ import net.anotheria.maf.action.ActionMapping;
 import net.anotheria.maf.bean.FormBean;
 import net.anotheria.util.StringUtils;
 import net.java.dev.moskito.webui.bean.dashboard.DashboardBean;
-import net.java.dev.moskito.webui.bean.dashboard.DashboardWidgetBean;
+import net.java.dev.moskito.webui.bean.dashboard.DashboardsConfig;
 
 import org.json.JSONException;
 
@@ -30,8 +28,9 @@ public class EditDashboardAction extends BaseDashboardAction {
 		String selectedDashboardName = getSelectedDashboardNameFromSession(req);
 
 		if (!StringUtils.isEmpty(req.getParameter(DELETE_WIDGET_PARAMETER_NAME))) {
-			deleteWidget(req, req.getParameter(DELETE_WIDGET_PARAMETER_NAME), selectedDashboardName);
-			saveDashboardsToCookie(req, res);
+			if (deleteWidget(req, req.getParameter(DELETE_WIDGET_PARAMETER_NAME), selectedDashboardName)) {
+				CookiePersistence.saveDashboardsToCookie(req, res);
+			}
 		}
 		
 		return mapping.redirect();
@@ -39,29 +38,18 @@ public class EditDashboardAction extends BaseDashboardAction {
 
 	
 	/**
-	 * Delete widget with specified name from given dashboard.
+	 * Delete widget with specified ID from given dashboard.
 	 *
-	 * @param widgetName	name of widget that should be deleted.
+	 * @param widgetId	ID of widget that should be deleted.
 	 * @param dashboardName name of dashboard from which widget should be deleted
 	 */
-	private void deleteWidget(HttpServletRequest req, String widgetName, String dashboardName) {
-		if (dashboardName == null)
-			return;
+	private boolean deleteWidget(HttpServletRequest req, String widgetId, String dashboardName) {
+		if (StringUtils.isEmpty(dashboardName) || StringUtils.isEmpty(widgetId))
+			return false;
 
-		List<DashboardBean> dashboards = getDashboardsFromSession(req);
-		for (DashboardBean dashboard : dashboards) {
-			if (!dashboard.getName().equalsIgnoreCase(dashboardName))
-				continue;
-
-			List<DashboardWidgetBean> widgets = dashboard.getWidgets();
-			if (widgets == null)
-				continue;
-			for (int i = 0; i < widgets.size(); i++)
-				if (widgets.get(i).getName().equals(widgetName)) {
-					widgets.remove(i);
-					return;
-				}
-		}
+		DashboardsConfig dashboards = getDashboards(req);
+		DashboardBean dashboard = dashboards.getDashboard(dashboardName);
+		return dashboard.removeWidget(Long.valueOf(widgetId));
 	}
 	
 }

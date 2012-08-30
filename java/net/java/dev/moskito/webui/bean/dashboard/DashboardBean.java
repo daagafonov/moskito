@@ -2,7 +2,7 @@ package net.java.dev.moskito.webui.bean.dashboard;
 
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.Collection;
+import java.util.Iterator;
 import java.util.List;
 
 import org.json.JSONArray;
@@ -47,12 +47,36 @@ public class DashboardBean implements Serializable {
 	}
 
 	public void setWidgetsLeft(List<DashboardWidgetBean> aWidgets) {
-		widgetsLeft = aWidgets;
+		if (aWidgets != null)
+			widgetsLeft = aWidgets;
 	}
 	
 	public void setWidgetsRight(List<DashboardWidgetBean> aWidgets) {
-		widgetsRight = aWidgets;
+		if (aWidgets != null)
+			widgetsRight = aWidgets;
 	}
+	
+	public void addWidgetLeft(DashboardWidgetBean widget) {
+		widgetsLeft.add(widget);
+	}
+	
+	public void addWidgetRight(DashboardWidgetBean widget) {
+		widgetsRight.add(widget);
+	}
+
+	@SuppressWarnings("unchecked")
+	public boolean removeWidget(long widgetId) {
+		for (List<DashboardWidgetBean> widgets : new List[]{widgetsLeft, widgetsRight}) {
+			for (Iterator<DashboardWidgetBean> it = widgets.iterator(); it.hasNext(); ) {
+				DashboardWidgetBean widget = it.next();
+				if (widget.getId() == widgetId) {
+					it.remove();
+					return true;
+				}
+			}
+		}
+		return false;
+	} 
 
 	@Override
 	public String toString() {
@@ -65,6 +89,29 @@ public class DashboardBean implements Serializable {
 		json.put("left", getWidgetsJson(widgetsLeft));
 		json.put("right", getWidgetsJson(widgetsRight));
 		return json;
+	}
+	
+	public static DashboardBean fromJSON(String dashName, JSONObject json) throws JSONException {
+		DashboardBean dash = new DashboardBean(dashName);
+		JSONArray widgetsLeft = json.getJSONArray("left");
+		JSONArray widgetsRight = json.getJSONArray("right");
+		
+		if (widgetsLeft.length() > 0 ) {
+			for (int i = 0; i < widgetsLeft.length(); i++) {
+				JSONObject jsonWidget = widgetsLeft.getJSONObject(i);
+				DashboardWidgetBean widget = DashboardWidgetBean.fromJson(jsonWidget);
+				dash.addWidgetLeft(widget);
+			}
+		}
+		if (widgetsRight.length() > 0 ) {
+			for (int i = 0; i < widgetsRight.length(); i++) {
+				JSONObject jsonWidget = widgetsRight.getJSONObject(i);
+				DashboardWidgetBean widget = DashboardWidgetBean.fromJson(jsonWidget);
+				dash.addWidgetRight(widget);
+			}
+		}
+		
+		return dash;
 	}
 	
 	/**
@@ -83,8 +130,8 @@ public class DashboardBean implements Serializable {
 		return jsonWidgets;
 	}
 
+	@Deprecated 		// TODO SHOULD BE DELETED
 	public List<DashboardWidgetBean> getWidgets() {
-		// TODO SHOULD BE DELETED
 		return new ArrayList<DashboardWidgetBean>(){{ 
 			addAll(widgetsLeft);
 			addAll(widgetsRight);

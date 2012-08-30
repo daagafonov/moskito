@@ -1,6 +1,7 @@
 package net.java.dev.moskito.webui.bean.dashboard;
 
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -16,8 +17,13 @@ import net.java.dev.moskito.webui.bean.WidgetType;
  *
  * @author dsilenko
  */
-public class DashboardWidgetBean {
+public class DashboardWidgetBean implements Serializable {
 
+	/**
+	 *	Serial version UID. 
+	 */
+	private static final long serialVersionUID = 1L;
+	
 	private long id;
 	private String name;
 	private WidgetType type;

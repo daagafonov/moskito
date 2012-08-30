@@ -47,6 +47,7 @@
     </select>
 
     <a href="#" class="edit dash" <ano:notPresent name="${selectedDashboardName}">style="display:none;"</ano:notPresent>>Edit</a>
+    <a href="mskDashboardDelete?dashboard=${selectedDashboardName}" <ano:notPresent name="${selectedDashboardName}">style="display:none;"</ano:notPresent>>Delete</a>
     <input type="button" value="Create widget" class="create_wdgt" <ano:iF test="${!isCanAddWidget}">style="display:none;"</ano:iF> />
 
     <div class="clear"></div>

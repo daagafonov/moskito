@@ -25,11 +25,11 @@ public class CreateDashboardAction extends BaseDashboardAction {
 		String dashboardName = req.getParameter(DASHBOARD_NAME);
 		if (!StringUtils.isEmpty(dashboardName)) {
 			DashboardBean bean = new DashboardBean(dashboardName);
-			DashboardsConfig dashboards = getDashboardsFromSession(req);
+			DashboardsConfig dashboards = getDashboards(req);
 			dashboards.add(bean);
 			dashboards.setSelectedDashboard(bean);//go to just created empty dashboard.
 			
-			saveDashboardsToCookie(req, res);
+			CookiePersistence.saveDashboardsToCookie(req, res);
 		}
 		return mapping.redirect();
 	}

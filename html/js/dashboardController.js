@@ -54,6 +54,10 @@ $(function() {
 		$('.lightbox .edit_dash_form input[type="text"]').val('Enter dashboard name');
 		$('.lightbox .edit_dash_form input[type="text"]').focus().select();
 		return false;
+		} else {
+			var selectedDash = $('.dashes option:selected')[0].value;
+			if (selectedDash)
+				window.location = window.location+'?dashboard='+selectedDash;
 		}
 		//		}
 	});

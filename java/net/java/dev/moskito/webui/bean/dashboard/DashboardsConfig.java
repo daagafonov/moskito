@@ -135,6 +135,19 @@ public class DashboardsConfig extends ArrayList<DashboardBean> {
 		else
 			throw new IllegalArgumentException("Can't set '"+selectedDashboard+"' dashboard as selected! We don't have dashboard with such name!");
 	}
+	
+	public long getMaxWidgetId() {
+		long maxId = 0;
+		for (DashboardBean dash : this) {
+			for (DashboardWidgetBean widget : dash.getWidgetsLeft()) {
+				maxId = Math.max(maxId, widget.getId());
+			}
+			for (DashboardWidgetBean widget : dash.getWidgetsRight()) {
+				maxId = Math.max(maxId, widget.getId());
+			}
+		}
+		return maxId;
+	}
 
 	@Override
 	public String toString() {
