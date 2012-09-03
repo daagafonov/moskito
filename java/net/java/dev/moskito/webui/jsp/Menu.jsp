@@ -102,7 +102,7 @@
 						<div class="over_color"><div><!-- --></div></div>
                     </li>
                     <li <ano:equal name="currentNaviItem" value="DASHBOARD">class="active"</ano:equal>>
-                        <a href="mskDashBoard">Dashboards</a>
+                        <a href="mskDashboard">Dashboards</a>
                     </li>
 					
 				</ul>

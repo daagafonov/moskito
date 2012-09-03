@@ -15,14 +15,24 @@ public class DashboardsConfig extends ArrayList<DashboardBean> {
 	 */
 	private static final long serialVersionUID = 6625586000446992098L;
 	
-	private DashboardBean selectedDashboard;
+	private DashboardBean defaultDashboard;
 	
-	public DashboardBean getDashboard(String name) {
-		if (!StringUtils.isEmpty(name))
-			for (DashboardBean bean: this)
-				if (bean.getName().equals(name))
-					return bean;
+	public DashboardBean getDashboard(int id) {
+		for (DashboardBean bean: this)
+			if (bean.getId() == id)
+				return bean;
 		return null;
+	}
+	
+	public DashboardBean getDefaultDashboard() {
+		if (defaultDashboard == null && size() > 0) {
+			setDefaultDashboard(get(0));
+		}
+		return defaultDashboard;
+	}
+	
+	public void setDefaultDashboard(DashboardBean dash) {
+		defaultDashboard = dash;
 	}
 	
 	/**
@@ -35,18 +45,18 @@ public class DashboardsConfig extends ArrayList<DashboardBean> {
 	public boolean add(DashboardBean bean) {
 		checkBean(bean);
 		
-//		for (int i = 0; i < size(); i++) {
-//			if (get(i).getName().equals(bean.getName())){
-//				bean.setName(bean.getName()+"*");
-//				add(bean);
-//			}
-//		}
-		while(getDashboard(bean.getName()) != null){
-			bean.setName(bean.getName()+"*");
+		for (int i = 0; i < size(); i++) {
+			if (get(i).getName().equals(bean.getName())){
+				bean.setName(bean.getName()+"*");
+				add(bean);
+			}
 		}
+//		while(getDashboard(bean.getName()) != null){
+//			bean.setName(bean.getName()+"*");
+//		}
 		super.add(bean);
-		if (selectedDashboard == null) {
-			selectedDashboard = bean;
+		if (defaultDashboard == null) {
+			defaultDashboard = bean;
 		}
 		return true;
 	}
@@ -74,39 +84,37 @@ public class DashboardsConfig extends ArrayList<DashboardBean> {
 	public void add(int pos, DashboardBean bean) {
 		checkBean(bean);
 		for (int i = 0; i < size(); i++) {
-			if (get(i).getName().equals(bean.getName()) && i != pos){
+			if (get(i).getName().equals(bean.getName())){
 				bean.setName(bean.getName()+"*");
 				add(pos, bean);
 			}
 		}
-		if (selectedDashboard == null) {
-			selectedDashboard = bean;
+		if (defaultDashboard == null) {
+			defaultDashboard = bean;
 		}
 		super.add(pos, bean);
 	}
 
-	public DashboardBean getSelectedDashboard() {
-		DashboardBean result = selectedDashboard;
-		if (result == null  && !isEmpty()) {
-			result = get(0);
-			selectedDashboard = result;
-		}
-		return result;
-	}
+//	public DashboardBean getSelectedDashboard() {
+//		DashboardBean result = defaultDashboard;
+//		if (result == null  && !isEmpty()) {
+//			result = get(0);
+//			defaultDashboard = result;
+//		}
+//		return result;
+//	}
+//	
+//	public void resetSelectedDashboard() {
+//		if (!isEmpty())
+//			defaultDashboard = get(0);
+//	}
 	
-	public void resetSelectedDashboard() {
-		if (!isEmpty())
-			selectedDashboard = get(0);
-	}
-	
-	public boolean removeByName(String dashboardName) {
-		if (StringUtils.isEmpty(dashboardName))
-			throw new IllegalArgumentException("DashboardsConfig can't work with dashboard without name!");
+	public boolean removeById(int dashboardId) {
 		for (int i = 0; i < size(); i++) {
-			if (get(i).getName().equals(dashboardName)){
+			if (get(i).getId() == dashboardId){
 				remove(i);
-				if (selectedDashboard!= null && selectedDashboard.getName().equals(dashboardName)){
-					resetSelectedDashboard();
+				if (defaultDashboard != null && defaultDashboard.getId() == dashboardId && size() > 0){
+					defaultDashboard = get(0);
 				}
 				return true;
 			}
@@ -119,25 +127,25 @@ public class DashboardsConfig extends ArrayList<DashboardBean> {
 		if (dashboard instanceof DashboardBean) {
 			DashboardBean bean = DashboardBean.class.cast(dashboard);
 			checkBean(bean);
-			return removeByName(bean.getName());
+			return removeById(bean.getId());
 		}
 		return false;
 	}
 
-	public void setSelectedDashboard(DashboardBean selectedDashboard) {
-		this.selectedDashboard = selectedDashboard;
-	}
+//	public void setSelectedDashboard(DashboardBean selectedDashboard) {
+//		this.defaultDashboard = selectedDashboard;
+//	}
+//	
+//	public void setSelectedDashboard(String selectedDashboard) {
+//		DashboardBean bean = getDashboard(selectedDashboard);
+//		if (bean != null)
+//			this.defaultDashboard = bean;
+//		else
+//			throw new IllegalArgumentException("Can't set '"+selectedDashboard+"' dashboard as selected! We don't have dashboard with such name!");
+//	}
 	
-	public void setSelectedDashboard(String selectedDashboard) {
-		DashboardBean bean = getDashboard(selectedDashboard);
-		if (bean != null)
-			this.selectedDashboard = bean;
-		else
-			throw new IllegalArgumentException("Can't set '"+selectedDashboard+"' dashboard as selected! We don't have dashboard with such name!");
-	}
-	
-	public long getMaxWidgetId() {
-		long maxId = 0;
+	public int getMaxWidgetId() {
+		int maxId = 0;
 		for (DashboardBean dash : this) {
 			for (DashboardWidgetBean widget : dash.getWidgetsLeft()) {
 				maxId = Math.max(maxId, widget.getId());
@@ -148,10 +156,22 @@ public class DashboardsConfig extends ArrayList<DashboardBean> {
 		}
 		return maxId;
 	}
+	
+	public int getNewWidgetId() {
+		return getMaxWidgetId() + 1;
+	}
+	
+	public int getMaxDashId() {
+		int maxId = 0;
+		for (DashboardBean dash : this) {
+			maxId = Math.max(maxId, dash.getId());
+		}
+		return maxId;
+	}
 
 	@Override
 	public String toString() {
-		return "DashboardsConfig [selectedDashboard=" + selectedDashboard
+		return "DashboardsConfig [defaultDashboard=" + defaultDashboard
 				+ ", toString()=" + super.toString() + "]";
 	}
 	

@@ -8,7 +8,7 @@
     </div>
     <div class="in">
         <h2>${widget.name}</h2>
-        <a href="?deleteWidget=${widget.name}" class="help">Close</a>
+        <a href="?deleteWidget=${widget.id}" class="help">Close</a>
         <a href="#" class="edit">Edit</a>
 
         <div class="clear"><!-- --></div>
@@ -67,20 +67,22 @@
 
     <!-- Editing widget(table) overlay-->
     <div class="edit_widget_overlay" style="display:none;">
-    <form action="mskDashBoard" class="create_widget_form" method="post">
+    <form action="mskDashboardEditWidget" class="create_widget_form" method="post">
     <h2>Edit widget</h2>
     <label for="name">Widget name:</label>
     <input type="text" name="widgetName" value="${widget.name}" id="name"/>
+    <input type="hidden" name="widgetId" value="${widget.id}"/>
+    <input type="hidden" name="dashboard" value="${selectedDashboardId}"/>
 
     <div class="widget_type">
         <ano:equal name="widget" property="type" value="TABLE">
             <input type="radio" id="t_table" name="widget_type" checked="checked"/><label for="t_table">Table widget</label>
         </ano:equal>
         <ano:equal name="widget" property="type" value="CHART">
-            <input type="radio" id="t_chart" name="widget_type"/><label for="t_chart">Chart widget</label>
+            <input type="radio" id="t_chart" name="widget_type" checked="checked"/><label for="t_chart">Chart widget</label>
         </ano:equal>
         <ano:equal name="widget" property="type" value="THRESHOLD">
-            <input type="radio" id="t_threshold" name="widget_type"/><label for="t_threshold">Threshold widget</label>
+            <input type="radio" id="t_threshold" name="widget_type" checked="checked"/><label for="t_threshold">Threshold widget</label>
         </ano:equal>
         <div class="clear"></div>
     </div>

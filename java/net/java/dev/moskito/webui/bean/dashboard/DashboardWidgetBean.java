@@ -24,12 +24,12 @@ public class DashboardWidgetBean implements Serializable {
 	 */
 	private static final long serialVersionUID = 1L;
 	
-	private long id;
+	private int id;
 	private String name;
 	private WidgetType type;
-	private List<ProducerDecoratorBean> producerDecoratorBeans;
+	private transient List<ProducerDecoratorBean> producerDecoratorBeans;
 	private List<String> configAttributes;
-	private List<ProducerGroup> producerGroups;
+	private transient List<ProducerGroup> producerGroups;
 
 	public DashboardWidgetBean() {
 	}
@@ -57,11 +57,11 @@ public class DashboardWidgetBean implements Serializable {
 		return producerGroups;
 	}
 
-	public long getId() {
+	public int getId() {
 		return id;
 	}
 
-	public void setId(long id) {
+	public void setId(int id) {
 		this.id = id;
 	}
 
@@ -123,6 +123,8 @@ public class DashboardWidgetBean implements Serializable {
 			widget.setType(WidgetType.getTypeByName(jsonWidget.getString("type"), WidgetType.TABLE));
 			
 			List<String> attributes = new ArrayList<String>();
+			widget.setConfigAttributes(attributes);
+			
 			JSONArray jsonAttributes = jsonWidget.getJSONArray("attributes");
 			for (int i = 0; i < jsonAttributes.length(); i++)
 				attributes.add(jsonAttributes.getString(i));

@@ -26,8 +26,10 @@ import net.java.dev.moskito.webui.action.accumulators.ShowAccumulatorAction;
 import net.java.dev.moskito.webui.action.accumulators.ShowAccumulatorsAction;
 import net.java.dev.moskito.webui.action.dashboards.BaseDashboardAction;
 import net.java.dev.moskito.webui.action.dashboards.CreateDashboardAction;
+import net.java.dev.moskito.webui.action.dashboards.CreateWidgetDashboardAction;
 import net.java.dev.moskito.webui.action.dashboards.DeleteDashboardAction;
 import net.java.dev.moskito.webui.action.dashboards.EditDashboardAction;
+import net.java.dev.moskito.webui.action.dashboards.EditWidgetDashboardAction;
 import net.java.dev.moskito.webui.action.dashboards.RenameDashboardAction;
 import net.java.dev.moskito.webui.action.thresholds.CreateThresholdAction;
 import net.java.dev.moskito.webui.action.thresholds.DeleteThresholdAction;
@@ -62,6 +64,12 @@ public class MoskitoMappingsConfigurator implements ActionMappingsConfigurator{
 				new CommandRedirect("redirect", "mskDashboard"));
 		mappings.addMapping("mskDashboardRename", RenameDashboardAction.class,
 				new CommandRedirect("redirect", "mskDashboard"));
+		
+		mappings.addMapping("mskDashboardCreateWidget", CreateWidgetDashboardAction.class,
+				new CommandRedirect("redirect", "mskDashboard"));
+		mappings.addMapping("mskDashboardEditWidget", EditWidgetDashboardAction.class,
+				new CommandRedirect("redirect", "mskDashboard"));
+		
 		
 		mappings.addMapping("mskShowAllProducers", ShowAllProducersAction.class,
 				new ActionForward("html", "/net/java/dev/moskito/webui/jsp/Producers.jsp"),

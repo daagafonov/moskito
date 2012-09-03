@@ -25,14 +25,14 @@ public class EditDashboardAction extends BaseDashboardAction {
 	@Override
 	public ActionCommand execute(ActionMapping mapping, FormBean formBean, HttpServletRequest req, HttpServletResponse res) throws JSONException {
 		
-		String selectedDashboardName = getSelectedDashboardNameFromSession(req);
-
-		if (!StringUtils.isEmpty(req.getParameter(DELETE_WIDGET_PARAMETER_NAME))) {
-			if (deleteWidget(req, req.getParameter(DELETE_WIDGET_PARAMETER_NAME), selectedDashboardName)) {
-				CookiePersistence.saveDashboardsToCookie(req, res);
-			}
-		}
-		
+//		String selectedDashboardName = getSelectedDashboardNameFromSession(req);
+//
+//		if (!StringUtils.isEmpty(req.getParameter(DELETE_WIDGET_PARAMETER_NAME))) {
+//			if (deleteWidget(req, req.getParameter(DELETE_WIDGET_PARAMETER_NAME), selectedDashboardName)) {
+//				CookiePersistence.saveDashboardsToCookie(req, res);
+//			}
+//		}
+//		
 		return mapping.redirect();
 	}
 
@@ -43,13 +43,13 @@ public class EditDashboardAction extends BaseDashboardAction {
 	 * @param widgetId	ID of widget that should be deleted.
 	 * @param dashboardName name of dashboard from which widget should be deleted
 	 */
-	private boolean deleteWidget(HttpServletRequest req, String widgetId, String dashboardName) {
-		if (StringUtils.isEmpty(dashboardName) || StringUtils.isEmpty(widgetId))
-			return false;
-
-		DashboardsConfig dashboards = getDashboards(req);
-		DashboardBean dashboard = dashboards.getDashboard(dashboardName);
-		return dashboard.removeWidget(Long.valueOf(widgetId));
-	}
+//	private boolean deleteWidget(HttpServletRequest req, String widgetId, String dashboardName) {
+//		if (StringUtils.isEmpty(dashboardName) || StringUtils.isEmpty(widgetId))
+//			return false;
+//
+//		DashboardsConfig dashboards = getDashboards(req);
+//		DashboardBean dashboard = dashboards.getDashboard(dashboardName);
+//		return dashboard.removeWidget(Long.valueOf(widgetId));
+//	}
 	
 }

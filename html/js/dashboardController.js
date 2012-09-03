@@ -55,9 +55,9 @@ $(function() {
 		$('.lightbox .edit_dash_form input[type="text"]').focus().select();
 		return false;
 		} else {
-			var selectedDash = $('.dashes option:selected')[0].value;
+			var selectedDash = $('.dashes option:selected')[0].value;//dashboard ID
 			if (selectedDash)
-				window.location = window.location+'?dashboard='+selectedDash;
+				window.location = window.location.href.split('?')[0]+'?dashboard='+selectedDash;
 		}
 		//		}
 	});

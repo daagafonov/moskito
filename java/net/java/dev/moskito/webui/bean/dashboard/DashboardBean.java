@@ -18,6 +18,7 @@ public class DashboardBean implements Serializable {
 
 	private static final long serialVersionUID = -3814471914706674484L;
 	private String name;
+	private int id;
 	private List<DashboardWidgetBean> widgetsLeft = new ArrayList<DashboardWidgetBean>();
 	private List<DashboardWidgetBean> widgetsRight = new ArrayList<DashboardWidgetBean>();
 
@@ -36,6 +37,14 @@ public class DashboardBean implements Serializable {
 
 	public void setName(String aName) {
 		name = aName;
+	}
+
+	public int getId() {
+		return id;
+	}
+
+	public void setId(int id) {
+		this.id = id;
 	}
 
 	public List<DashboardWidgetBean> getWidgetsLeft() {
@@ -65,7 +74,7 @@ public class DashboardBean implements Serializable {
 	}
 
 	@SuppressWarnings("unchecked")
-	public boolean removeWidget(long widgetId) {
+	public boolean removeWidget(int widgetId) {
 		for (List<DashboardWidgetBean> widgets : new List[]{widgetsLeft, widgetsRight}) {
 			for (Iterator<DashboardWidgetBean> it = widgets.iterator(); it.hasNext(); ) {
 				DashboardWidgetBean widget = it.next();
@@ -77,6 +86,19 @@ public class DashboardBean implements Serializable {
 		}
 		return false;
 	} 
+	
+	@SuppressWarnings("unchecked")
+	public DashboardWidgetBean getWidget(int widgetId) {
+		for (List<DashboardWidgetBean> widgets : new List[]{widgetsLeft, widgetsRight}) {
+			for (Iterator<DashboardWidgetBean> it = widgets.iterator(); it.hasNext(); ) {
+				DashboardWidgetBean widget = it.next();
+				if (widget.getId() == widgetId) {
+					return widget;
+				}
+			}
+		}
+		return null;
+	}
 
 	@Override
 	public String toString() {
@@ -86,13 +108,17 @@ public class DashboardBean implements Serializable {
 	
 	public JSONObject toJSON() throws JSONException {
 		JSONObject json = new JSONObject();
+		json.put("name", name);
+		json.put("id", id);
 		json.put("left", getWidgetsJson(widgetsLeft));
 		json.put("right", getWidgetsJson(widgetsRight));
 		return json;
 	}
 	
-	public static DashboardBean fromJSON(String dashName, JSONObject json) throws JSONException {
-		DashboardBean dash = new DashboardBean(dashName);
+	public static DashboardBean fromJSON(JSONObject json) throws JSONException {
+		
+		DashboardBean dash = new DashboardBean(json.getString("name"));
+		dash.setId(json.getInt("id"));
 		JSONArray widgetsLeft = json.getJSONArray("left");
 		JSONArray widgetsRight = json.getJSONArray("right");
 		

@@ -5,6 +5,7 @@ import javax.servlet.http.HttpServletResponse;
 
 import net.anotheria.maf.action.ActionCommand;
 import net.anotheria.maf.action.ActionMapping;
+import net.anotheria.maf.action.CommandRedirect;
 import net.anotheria.maf.bean.FormBean;
 import net.anotheria.util.StringUtils;
 import net.java.dev.moskito.webui.action.dashboards.BaseDashboardAction.CookiePersistence;
@@ -19,15 +20,13 @@ import org.json.JSONException;
  */
 public class RenameDashboardAction extends BaseDashboardAction {
 	
-	private static final String DASHBOARD_OLD_NAME = "dashboardOldName";
-	
 	@Override
 	public ActionCommand execute(ActionMapping mapping, FormBean formBean, HttpServletRequest req, HttpServletResponse res) throws JSONException {
-		String dashboardName = req.getParameter(DASHBOARD_OLD_NAME);
+		int dashboardId = Integer.parseInt(req.getParameter(DASHBOARD_PARAMETER_NAME));
 		String newName = req.getParameter(DASHBOARD_NAME);
-		if (!StringUtils.isEmpty(dashboardName)&& !StringUtils.isEmpty(newName)) {
+		if (!StringUtils.isEmpty(newName)) {
 			DashboardsConfig dashboards = getDashboards(req);
-			DashboardBean bean = dashboards.getDashboard(dashboardName);
+			DashboardBean bean = dashboards.getDashboard(dashboardId);
 			if (bean != null) {
 				bean.setName(newName);
 				CookiePersistence.saveDashboardsToCookie(req, res);
@@ -35,7 +34,7 @@ public class RenameDashboardAction extends BaseDashboardAction {
 				//TODO log this!
 			}
 		}
-		return mapping.redirect();
+		return mapping.redirect().addParameter(DASHBOARD_PARAMETER_NAME, ""+dashboardId);
 	}
 
 }

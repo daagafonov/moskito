@@ -2,6 +2,7 @@ package net.java.dev.moskito.webui.action.dashboards;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
 import java.util.ArrayList;
@@ -9,6 +10,7 @@ import java.util.Collections;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.List;
+import java.util.regex.Pattern;
 import java.util.zip.DataFormatException;
 import java.util.zip.Deflater;
 import java.util.zip.Inflater;
@@ -50,9 +52,11 @@ public class BaseDashboardAction extends BaseMoskitoUIAction {
 
 	protected static final String DASHBOARD_PARAMETER_NAME = "dashboard";
 	
-	private static final String WIDGET_NAME_PARAMETER_NAME = "widgetName";
-	private static final String WIDGET_TYPE_PARAMETER_NAME = "widgetType";
-	private static final String RELOAD_PARAMETER_NAME = "reload";
+	protected static final String WIDGET_NAME_PARAMETER_NAME = "widgetName";
+	protected static final String WIDGET_TYPE_PARAMETER_NAME = "widgetType";
+	protected static final String WIDGET_ID_PARAMETER_NAME = "widgetId";
+	protected static final String RELOAD_PARAMETER_NAME = "reload";
+	
 	private static final String DASHBOARDS_COOKIE_NAME = "dashboards";
 	
 	private static final String DASHBOARDS_SESSION_ATTR = "dashboards";
@@ -62,51 +66,53 @@ public class BaseDashboardAction extends BaseMoskitoUIAction {
 	@Override
 	public ActionCommand execute(ActionMapping mapping, FormBean formBean, HttpServletRequest req, HttpServletResponse res) throws JSONException {
 		printReq(req);
-		String selectedDashboardName = req.getParameter(DASHBOARD_PARAMETER_NAME);
+		String selectedDashboardId = req.getParameter(DASHBOARD_PARAMETER_NAME);
 		DashboardBean dash = null;
 		DashboardsConfig dashes = getDashboards(req);
 
-		if (StringUtils.isEmpty(selectedDashboardName)) {
-			dash = dashes.getSelectedDashboard();
-			if (dash != null)
-				selectedDashboardName = dash.getName();
+		if (StringUtils.isEmpty(selectedDashboardId)) {
+			dash = dashes.getDefaultDashboard();
+//			if (dash != null)
+//				selectedDashboard = dash.getName();
 		} else {
 			try {
-				dashes.setSelectedDashboard(selectedDashboardName);
-				dash = dashes.getSelectedDashboard();
+//				dashes.setSelectedDashboard(selectedDashboard);
+				dash = dashes.getDashboard(Integer.parseInt(selectedDashboardId));
+			} catch (NumberFormatException e) {
+				//TODO log wrong dashboard ID
 			} catch (IllegalArgumentException e) {
-				//TODO log wrong dashboard name
+				//TODO log wrong dashboard ID
 			}
 		}
 
 		if (dash != null) {
 			
 			List<ProducerDecoratorBean> producerDecoratorBeans = getDecoratedProducers(req, getAPI().getAllProducers(), new HashMap<String, GraphDataBean>());
-			refreshWidgetsData(req, selectedDashboardName, producerDecoratorBeans);
+			refreshWidgetsData(req, Integer.parseInt(selectedDashboardId), producerDecoratorBeans);
 
 
-			if (/*widgets.isEmpty() || */req.getParameter(RELOAD_PARAMETER_NAME) != null) {
-				try {
-					CookiePersistence.loadDashboardsFromCookie(/*producerDecoratorBeans, */req);
-				} catch (JSONException e) {
-					System.out.println(e);
-					//todo handle this case and log
-				}
-			} else {
-				@SuppressWarnings("unchecked")
-				List<String> configAttributes = Collections.list(req.getParameterNames());
-				configAttributes.remove(WIDGET_NAME_PARAMETER_NAME);
-				configAttributes.remove(WIDGET_TYPE_PARAMETER_NAME);
-
-				List<ProducerGroup> widgetContent = getWidgetContent(producerDecoratorBeans, configAttributes);
-				DashboardWidgetBean widget = new DashboardWidgetBean(req.getParameter(WIDGET_NAME_PARAMETER_NAME));
-				widget.setType(WidgetType.getTypeByName(req.getParameter(WIDGET_TYPE_PARAMETER_NAME), WidgetType.TABLE));
-				widget.setConfigAttributes(configAttributes);
-
-				putWidgetToDashboard(req, selectedDashboardName, widget, widgetContent);
-
-				CookiePersistence.saveDashboardsToCookie(req, res);//TODO is this needed?
-			}
+//			if (/*widgets.isEmpty() || */req.getParameter(RELOAD_PARAMETER_NAME) != null) {
+//				try {
+//					CookiePersistence.loadDashboardsFromCookie(/*producerDecoratorBeans, */req);
+//				} catch (JSONException e) {
+//					System.out.println(e);
+//					//todo handle this case and log
+//				}
+//			} else {
+//				@SuppressWarnings("unchecked")
+//				List<String> configAttributes = Collections.list(req.getParameterNames());
+//				configAttributes.remove(WIDGET_NAME_PARAMETER_NAME);
+//				configAttributes.remove(WIDGET_TYPE_PARAMETER_NAME);
+//
+//				List<ProducerGroup> widgetContent = getWidgetContent(producerDecoratorBeans, configAttributes);
+//				DashboardWidgetBean widget = new DashboardWidgetBean(req.getParameter(WIDGET_NAME_PARAMETER_NAME));
+//				widget.setType(WidgetType.getTypeByName(req.getParameter(WIDGET_TYPE_PARAMETER_NAME), WidgetType.TABLE));
+//				widget.setConfigAttributes(configAttributes);
+//
+//				putWidgetToDashboard(req, selectedDashboardName, widget, widgetContent);
+//
+//				CookiePersistence.saveDashboardsToCookie(req, res);//TODO is this needed?
+//			}
 
 
 			//		List<DashboardWidgetBean> widgetsLeft = new ArrayList<DashboardWidgetBean>();
@@ -123,7 +129,7 @@ public class BaseDashboardAction extends BaseMoskitoUIAction {
 
 			req.setAttribute("decorators", producerDecoratorBeans);
 			req.setAttribute("dashboards", getDashboards(req));
-			req.setAttribute("selectedDashboardName", selectedDashboardName);
+			req.setAttribute("selectedDashboardId", selectedDashboardId);
 			//req.setAttribute("widgets", widgets);
 //			if (selectedDashboard != null) {
 				req.setAttribute("widgetsLeft", dash.getWidgetsLeft());
@@ -131,8 +137,8 @@ public class BaseDashboardAction extends BaseMoskitoUIAction {
 //			}
 		}
 		//req.setAttribute("graphDatas", graphData.values());
+		req.setAttribute("isCanAddWidget", dash != null);
 		req.setAttribute("pageTitle", "Dashboard");
-		req.setAttribute("isCanAddWidget", !StringUtils.isEmpty(selectedDashboardName));
 
 		return mapping.findCommand(getForward(req));
 	}
@@ -145,7 +151,7 @@ public class BaseDashboardAction extends BaseMoskitoUIAction {
 	 * @param req
 	 * @return dashboards
 	 */
-	protected String getSelectedDashboardNameFromSession(HttpServletRequest req) {
+//	protected String getSelectedDashboardNameFromSession(HttpServletRequest req) {
 
 //		String dashboard = req.getParameter(DASHBOARD_PARAMETER_NAME);
 //		if (!StringUtils.isEmpty(dashboard)) {
@@ -161,9 +167,9 @@ public class BaseDashboardAction extends BaseMoskitoUIAction {
 //		}
 //
 //		return selectedDashBoardName;
-		DashboardBean dash = getDashboards(req).getSelectedDashboard();
-		return dash == null ? null : dash.getName(); 
-	}
+//		DashboardBean dash = getDashboards(req).getSelectedDashboard();
+//		return dash == null ? null : dash.getName(); 
+//	}
 	
 
 	/**
@@ -199,15 +205,16 @@ public class BaseDashboardAction extends BaseMoskitoUIAction {
 	 * Refreshes data for all widgets in specified dashboard.
 	 *
 	 * @param req
-	 * @param dashboardName		  name of dashboard that should be refreshed
+	 * @param dashboardId ID of dashboard that should be refreshed
 	 * @param producerDecoratorBeans data for widgets
 	 */
-	private void refreshWidgetsData(HttpServletRequest req, String dashboardName, List<ProducerDecoratorBean> producerDecoratorBeans) {
-		for (DashboardBean dashboard : getDashboards(req))
-			if (dashboard.getName().equals(dashboardName)) {
-				for (DashboardWidgetBean widget : dashboard.getWidgets())
+	@SuppressWarnings("unchecked")
+	private void refreshWidgetsData(HttpServletRequest req, int dashboardId, List<ProducerDecoratorBean> producerDecoratorBeans) {
+		DashboardBean dashboard = getDashboards(req).getDashboard(dashboardId);
+		if (dashboard != null)
+			for (List<DashboardWidgetBean> widgets : new List[]{dashboard.getWidgetsLeft(), dashboard.getWidgetsRight()})
+				for (DashboardWidgetBean widget : widgets)
 					widget.setProducerGroups(getWidgetContent(producerDecoratorBeans, widget.getConfigAttributes()));
-			}
 	}
 	
 	/**
@@ -269,51 +276,26 @@ public class BaseDashboardAction extends BaseMoskitoUIAction {
 		return producerGroups;
 	}
 
-	/**
-	 * Puts widget into specified dashboard. If specified dashboard is absent it wil be created automatically.
-	 *
-	 * @param req
-	 * @param dashboardName	name of dashboard into which widget will be puted
-	 * @param widgetName	   widget name
-	 * @param widgetTypeName   widget type name
-	 * @param producerGroups   content of widget
-	 * @param configAttributes config that helps for content for widget
-	 */
-	protected void putWidgetToDashboard(HttpServletRequest req, String dashboardName, DashboardWidgetBean widgetBean, List<ProducerGroup> producerGroups) {
-		if (StringUtils.isEmpty(dashboardName))
-			return;
-
-		DashboardBean dashboardBean = getDashboardByName(req, dashboardName);
-		if (dashboardBean == null) {
-//			dashboardBean = new DashboardBean(dashboardName);
-//			putDashboardToSession(req, dashboardBean);
-			throw new IllegalArgumentException("Wrong dashboard name passed! Can't add widget to dashboard '"+dashboardName+"'!");
-		}
-
-		for (List<DashboardWidgetBean> widgetBeans : new List[]{dashboardBean.getWidgetsLeft(), dashboardBean.getWidgetsRight()}) {
-
-			for (DashboardWidgetBean widget : widgetBeans)
-				if (widget.getName().equals(widgetBean.getName())) {
-					widget.setProducerGroups(producerGroups);
-					return;
-				}
-			widgetBean.setProducerGroups(producerGroups);
-			widgetBeans.add(widgetBean);
-		}
-	}
+	
 
 	/**
 	 * If there is no dashboard with given name than null will be returned.
 	 *
 	 * @param req
-	 * @param dashboardName dashboard name
+	 * @param dashboardId dashboard id
 	 * @return dash board with specified name
 	 */
-	private DashboardBean getDashboardByName(HttpServletRequest req, String dashboardName) {
-		for (DashboardBean dashboard : getDashboards(req))
-			if (dashboard.getName().equals(dashboardName))
-				return dashboard;
-
+	protected DashboardBean getDashboardById(HttpServletRequest req, String dashboardId) {
+		if (!StringUtils.isEmpty(dashboardId)) {
+			try {
+				int id = Integer.parseInt(dashboardId);
+				for (DashboardBean dashboard : getDashboards(req))
+					if (dashboard.getId() == id)
+						return dashboard;
+			} catch (NumberFormatException e) {
+				//TODO log this
+			}
+		}
 		return null;
 	}
 
@@ -371,6 +353,20 @@ public class BaseDashboardAction extends BaseMoskitoUIAction {
 		System.out.println("--> " + debug);
 	}
 	
+	private static final Pattern FINE_PARAMETER_VALUE = Pattern.compile("\\w+");
+	
+	protected static String encodeParam(String parameterValue) {
+		if (!FINE_PARAMETER_VALUE.matcher(parameterValue).matches()) {
+			try {
+				parameterValue = URLEncoder.encode(parameterValue, "UTF-8");
+			} catch (UnsupportedEncodingException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+		return parameterValue;
+	}
+	
 	
 	protected static class CookiePersistence {
 		/**
@@ -384,8 +380,8 @@ public class BaseDashboardAction extends BaseMoskitoUIAction {
 			JSONObject jsonDashboards = new JSONObject();
 			DashboardsConfig config = getDashboards(req);
 
-			if (config.getSelectedDashboard() != null) {
-				jsonDashboards.put("selectedDash", config.getSelectedDashboard().getName());
+			if (config.getDefaultDashboard() != null) {
+				jsonDashboards.put("defaultDash", config.getDefaultDashboard().getId());
 			}
 			for (DashboardBean dashboard : config) {
 				jsonDashboards.put(dashboard.getName(), dashboard.toJSON());
@@ -447,14 +443,17 @@ public class BaseDashboardAction extends BaseMoskitoUIAction {
 				if (dashboardNames == null || dashboardNames.length == 0)
 					return;
 				
-				String selectedDash = jsonDashboards.getString("selectedDash");
+				int selectedDash = jsonDashboards.getInt("defaultDash");
 
 				for (String dashboardName : dashboardNames) {
+					if (dashboardName.equals("defaultDash")) {
+						continue;
+					}
 					JSONObject jsonDash = jsonDashboards.getJSONObject(dashboardName);
-					DashboardBean dash = DashboardBean.fromJSON(dashboardName, jsonDash);
+					DashboardBean dash = DashboardBean.fromJSON(/*dashboardName, */jsonDash);
 					dashes.add(dash);
-					if (dashboardName.equals(selectedDash)) {
-						dashes.setSelectedDashboard(dash);
+					if (selectedDash == dash.getId()) {
+						dashes.setDefaultDashboard(dash);
 					}
 				}
 			}

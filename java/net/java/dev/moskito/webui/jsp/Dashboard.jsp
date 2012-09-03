@@ -41,29 +41,35 @@
     <select class="dashes">
         <option class="create">Create dashboard</option>
         <!--<option disabled selected="selected"></option>-->
+        <ano:notEmpty name="dashboards">
         <ano:iterate name="dashboards" id="dashboard">
-            <option <ano:equal name="dashboard" property="name" value="${selectedDashboardName}">selected="selected"</ano:equal>>${dashboard.name}</option>
+            <option value="${dashboard.id}" <ano:equal name="dashboard" property="id" value="${selectedDashboardId}">selected="selected"</ano:equal>>${dashboard.name}</option>
         </ano:iterate>
+        </ano:notEmpty>
     </select>
 
-    <a href="#" class="edit dash" <ano:notPresent name="${selectedDashboardName}">style="display:none;"</ano:notPresent>>Edit</a>
-    <a href="mskDashboardDelete?dashboard=${selectedDashboardName}" <ano:notPresent name="${selectedDashboardName}">style="display:none;"</ano:notPresent>>Delete</a>
+    <a href="#" class="edit dash" <ano:notPresent name="${selectedDashboardId}">style="display:none;"</ano:notPresent>>Edit</a>
+    <a href="mskDashboardDelete?dashboard=${selectedDashboardId}" <ano:notPresent name="${selectedDashboardId}">style="display:none;"</ano:notPresent>>Delete</a>
     <input type="button" value="Create widget" class="create_wdgt" <ano:iF test="${!isCanAddWidget}">style="display:none;"</ano:iF> />
 
     <div class="clear"></div>
 
     <div class="draggable">
         <div class="widgets_left">
+        	<ano:notEmpty name="widgetsLeft">
             <ano:iterate id="widgetLeft" name="widgetsLeft">
                 <ano:define id="widget" name="widgetLeft" toScope="request"/>
                 <jsp:include page="DashboardShowWidget.jsp" flush="false"/>
             </ano:iterate>
+            </ano:notEmpty>
         </div>
         <div class="widgets_right">
+        	<ano:notEmpty name="widgetsRight">
             <ano:iterate id="widgetRight" name="widgetsRight">
                 <ano:define id="widget" name="widgetRight" toScope="request"/>
                 <jsp:include page="DashboardShowWidget.jsp" flush="false"/>
             </ano:iterate>
+            </ano:notEmpty>
         </div>
     </div>
     <div class="clear"></div>
@@ -72,15 +78,16 @@
 
     <!-- Creating widget(table) overlay-->
     <div class="create_widget_overlay" style="display:none;">
-    <form action="mskDashBoard" class="create_widget_form" method="post">
+    <form action="mskDashboardCreateWidget" class="create_widget_form" method="post">
 		<h2>Create widget</h2>
 		<label for="name">Widget name:</label>
 		<input type="text" name="widgetName" value="" id="name"/>
+		<input type="hidden" name="dashboard" value="${selectedDashboardId}"/>
 
 		<div class="widget_type">
-			<input type="radio" id="t_table" name="widgetType" checked="checked"/><label for="t_table">Table widget</label>
-			<input type="radio" id="t_chart" name="widgetType"/><label for="t_chart">Chart widget</label>
-			<input type="radio" id="t_threshold" name="widgetType"/><label for="t_threshold">Threshold widget</label>
+			<input type="radio" id="t_table" name="widgetType" value="Table" checked="checked"/><label for="t_table">Table widget</label>
+			<input type="radio" id="t_chart" name="widgetType" value="Chart"/><label for="t_chart">Chart widget</label>
+			<input type="radio" id="t_threshold" name="widgetType" value="Threshold"/><label for="t_threshold">Threshold widget</label>
 			<div class="clear"></div>
 		</div>
 
@@ -89,6 +96,7 @@
 		<div class="t_table_prod_group">
 			<h3>Producer group</h3>
 			<ul>
+				<ano:notEmpty name="decorators">
 				<ano:iterate name="decorators" id="decorator" indexId="indexId">
 					<ano:equal name="decorator" property="visibility" value="SHOW">
 						<li class="${indexId == 0 ? " active" : ""}">
@@ -101,6 +109,7 @@
 						</li>
 					</ano:equal>
 				</ano:iterate>
+				</ano:notEmpty>
 			</ul>
 		</div>
 
@@ -110,6 +119,7 @@
 		<div class="t_table_val">
 			<h3>Value</h3>
 			<!--  -->
+			<ano:notEmpty name="decorators">
 			<ano:iterate name="decorators" id="decorator" indexId="indexId">
 				<ano:equal name="decorator" property="visibility" value="SHOW">
 					<ul class="<ano:write name="decorator" property="name"/>_val" ${indexId != 0 ? "style='display:none;'" : ""}>
@@ -120,11 +130,13 @@
 					</ul>
 				</ano:equal>
 			</ano:iterate>
+			</ano:notEmpty>
 		</div>
 
 		<div class="t_table_prod">
 
 			<h3>Producer</h3>
+			<ano:notEmpty name="decorators">
 			<ano:iterate name="decorators" id="decorator" indexId="indexId">
 				<ano:equal name="decorator" property="visibility" value="SHOW">
 					<ul class="${decorator.name}_prod" ${indexId != 0 ? "style='display:none;'" : ""}>
@@ -136,6 +148,7 @@
 					</ul>
 				</ano:equal>
 			</ano:iterate>
+			</ano:notEmpty>
 		</div>
 
 		<div class="clear"></div>
@@ -189,7 +202,7 @@
         <h2>Edit dashboard name</h2>
         <label for="name">Name:</label>
         <input type="text" name="dashboardName" value="" id="name"/>
-        <input type="hidden" name="dashboardOldName" value="${dashboard.name}"/>
+        <input type="hidden" name="dashboard" value="${dashboard.id}"/>
 
         <div class="clear"></div>
         <div class="flr">
@@ -239,6 +252,7 @@
 <td class="t_pie_bar_prod_group">
     <h3>Producer group</h3>
     <ul>
+    	<ano:notEmpty name="decorators">
 		<ano:iterate name="decorators" id="decorator" indexId="indexId">
 			<ano:equal name="decorator" property="visibility" value="SHOW">
 				<li class="${indexId == 0 ? " active": ""}">
@@ -246,6 +260,7 @@
 				</li>
 			</ano:equal>
 		</ano:iterate>
+		</ano:notEmpty>
     </ul>
 </td>
 <%--Chart: write out producer groups END--%>
@@ -254,6 +269,7 @@
 <td class="t_pie_bar_val">
 
     <h3>Value</h3>
+    <ano:notEmpty name="decorators">
 	<ano:iterate name="decorators" id="decorator" indexId="indexId">
 		<ano:equal name="decorator" property="visibility" value="SHOW">
 			<ul class="${decorator.name}_val" ${indexId != 0 ? "style='display:none;'" : ""}>
@@ -264,6 +280,7 @@
 			</ul>
 		</ano:equal>
 	</ano:iterate>
+	</ano:notEmpty>
 </td>
 <%--Chart: write out value END--%>
 

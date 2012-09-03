@@ -22,6 +22,7 @@ public enum WidgetType {
 	}
 	
 	public static WidgetType getTypeByName(String name, WidgetType def) {
+		System.out.println("WidgetType.getTypeByName() got '"+name+"' as param.");
 		for (WidgetType type : values()) {
 			if (type.getType().equals(name))
 				return type;
