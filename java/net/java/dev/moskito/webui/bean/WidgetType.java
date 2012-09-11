@@ -1,5 +1,7 @@
 package net.java.dev.moskito.webui.bean;
 
+import net.java.dev.moskito.webui.action.dashboards.BaseDashboardAction;
+
 /**
  * Enum for widget types.
  *
@@ -22,7 +24,8 @@ public enum WidgetType {
 	}
 	
 	public static WidgetType getTypeByName(String name, WidgetType def) {
-		System.out.println("WidgetType.getTypeByName() got '"+name+"' as param.");
+		if (BaseDashboardAction.DEBUG) 
+			System.out.println("WidgetType.getTypeByName() got '"+name+"' as param.");
 		for (WidgetType type : values()) {
 			if (type.getType().equals(name))
 				return type;

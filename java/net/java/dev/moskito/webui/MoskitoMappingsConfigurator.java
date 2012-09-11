@@ -28,6 +28,7 @@ import net.java.dev.moskito.webui.action.dashboards.BaseDashboardAction;
 import net.java.dev.moskito.webui.action.dashboards.CreateDashboardAction;
 import net.java.dev.moskito.webui.action.dashboards.CreateWidgetDashboardAction;
 import net.java.dev.moskito.webui.action.dashboards.DeleteDashboardAction;
+import net.java.dev.moskito.webui.action.dashboards.DeleteWidgetAction;
 import net.java.dev.moskito.webui.action.dashboards.EditDashboardAction;
 import net.java.dev.moskito.webui.action.dashboards.EditWidgetDashboardAction;
 import net.java.dev.moskito.webui.action.dashboards.RenameDashboardAction;
@@ -68,6 +69,8 @@ public class MoskitoMappingsConfigurator implements ActionMappingsConfigurator{
 		mappings.addMapping("mskDashboardCreateWidget", CreateWidgetDashboardAction.class,
 				new CommandRedirect("redirect", "mskDashboard"));
 		mappings.addMapping("mskDashboardEditWidget", EditWidgetDashboardAction.class,
+				new CommandRedirect("redirect", "mskDashboard"));
+		mappings.addMapping("mskDashboardDeleteWidget", DeleteWidgetAction.class,
 				new CommandRedirect("redirect", "mskDashboard"));
 		
 		

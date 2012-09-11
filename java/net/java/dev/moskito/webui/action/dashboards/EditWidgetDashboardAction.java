@@ -41,6 +41,9 @@ public class EditWidgetDashboardAction extends BaseDashboardAction {
 //			widget.setId(getDashboards(req).getNewWidgetId());
 //			widget.setType(WidgetType.getTypeByName(req.getParameter(WIDGET_TYPE_PARAMETER_NAME), WidgetType.TABLE));
 				widget.setConfigAttributes(configAttributes);
+				if (!widget.getName().equals(widgetName)) {
+					widget.setName(widgetName);
+				}
 				CookiePersistence.saveDashboardsToCookie(req, res);
 			
 			} else {

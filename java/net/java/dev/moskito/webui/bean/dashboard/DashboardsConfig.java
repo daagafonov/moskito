@@ -45,12 +45,6 @@ public class DashboardsConfig extends ArrayList<DashboardBean> {
 	public boolean add(DashboardBean bean) {
 		checkBean(bean);
 		
-		for (int i = 0; i < size(); i++) {
-			if (get(i).getName().equals(bean.getName())){
-				bean.setName(bean.getName()+"*");
-				add(bean);
-			}
-		}
 //		while(getDashboard(bean.getName()) != null){
 //			bean.setName(bean.getName()+"*");
 //		}
@@ -113,8 +107,12 @@ public class DashboardsConfig extends ArrayList<DashboardBean> {
 		for (int i = 0; i < size(); i++) {
 			if (get(i).getId() == dashboardId){
 				remove(i);
-				if (defaultDashboard != null && defaultDashboard.getId() == dashboardId && size() > 0){
-					defaultDashboard = get(0);
+				if (defaultDashboard != null && defaultDashboard.getId() == dashboardId){
+					if (size() > 0) {
+						defaultDashboard = get(0);
+					} else {
+						defaultDashboard = null;
+					}
 				}
 				return true;
 			}
@@ -167,6 +165,10 @@ public class DashboardsConfig extends ArrayList<DashboardBean> {
 			maxId = Math.max(maxId, dash.getId());
 		}
 		return maxId;
+	}
+	
+	public int getNewDashId() {
+		return getMaxDashId() + 1;
 	}
 
 	@Override

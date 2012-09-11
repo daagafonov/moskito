@@ -38,19 +38,37 @@
     </script>--%>
 
 <div class="main">
-    <select class="dashes">
-        <option class="create">Create dashboard</option>
-        <!--<option disabled selected="selected"></option>-->
-        <ano:notEmpty name="dashboards">
-        <ano:iterate name="dashboards" id="dashboard">
-            <option value="${dashboard.id}" <ano:equal name="dashboard" property="id" value="${selectedDashboardId}">selected="selected"</ano:equal>>${dashboard.name}</option>
-        </ano:iterate>
-        </ano:notEmpty>
-    </select>
-
-    <a href="#" class="edit dash" <ano:notPresent name="${selectedDashboardId}">style="display:none;"</ano:notPresent>>Edit</a>
-    <a href="mskDashboardDelete?dashboard=${selectedDashboardId}" <ano:notPresent name="${selectedDashboardId}">style="display:none;"</ano:notPresent>>Delete</a>
-    <input type="button" value="Create widget" class="create_wdgt" <ano:iF test="${!isCanAddWidget}">style="display:none;"</ano:iF> />
+<%-- SELECT DASHBOARD --%>
+		<select class="dashes">
+			<option class="create">Create dashboard</option>
+			<!--<option disabled selected="selected"></option>-->
+			<ano:notEmpty name="dashboards">
+				<ano:iterate name="dashboards" id="dashboard">
+					<ano:equal name="dashboard" property="id"
+						value="${selectedDashboardId}">
+						<option value="${dashboard.id}" selected="selected">${dashboard.name}</option>
+					</ano:equal>
+					<ano:notEqual name="dashboard" property="id"
+						value="${selectedDashboardId}">
+						<option value="${dashboard.id}">${dashboard.name}</option>
+					</ano:notEqual>
+				</ano:iterate>
+			</ano:notEmpty>
+		</select>
+		<ano:present name="selectedDashboardId">
+			<ano:iterate name="dashboards" id="dashboard">
+				<ano:equal name="dashboard" property="id" value="${selectedDashboardId}">
+					<a href="#" class="edit dash">Edit</a>
+					<a href="mskDashboardDelete?dashboard=${selectedDashboardId}">Delete Dashboard</a>
+					<input type="button" value="Create widget" class="create_wdgt" />
+				</ano:equal>
+			</ano:iterate>
+			<ano:iFNot test="${defaultDashId eq dashboard.id}">
+				<a href="mskDashboard?defaultDashboard=${selectedDashboardId}">Make
+					Default + ${defaultDashId} + "-" + ${dashboard.id}"</a>
+			</ano:iFNot>
+		</ano:present>
+		<%-- SELECT DASHBOARD END--%>
 
     <div class="clear"></div>
 
@@ -261,7 +279,19 @@
 			</ano:equal>
 		</ano:iterate>
 		</ano:notEmpty>
-    </ul>
+		<ano:notEmpty name="decorators">
+			<ano:iterate name="decorators" id="decorator" indexId="indexId">
+				<ano:equal name="decorator" property="visibility" value="SHOW">
+					<li class="${indexId == 0 ? "active" : ""}">
+						<div class="top_l"></div>
+						<div class="bot_l"></div> 
+						<a href="#" class="uncheck"> <img	src="<ano:write name="mskPathToImages" scope="application"/>close.png"alt="Uncheck" title="Uncheck" />&nbsp;</a>
+						<a href="#" class="${decorator.name}">${decorator.name}</a>
+					</li>
+				</ano:equal>
+			</ano:iterate>
+		</ano:notEmpty>
+	</ul>
 </td>
 <%--Chart: write out producer groups END--%>
 

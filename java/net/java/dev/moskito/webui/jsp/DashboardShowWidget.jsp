@@ -8,7 +8,7 @@
     </div>
     <div class="in">
         <h2>${widget.name}</h2>
-        <a href="?deleteWidget=${widget.id}" class="help">Close</a>
+        <a href="mskDashboardDeleteWidget?dashboard=${selectedDashboardId}&widgetId=${widget.id}" class="help">Close</a>
         <a href="#" class="edit">Edit</a>
 
         <div class="clear"><!-- --></div>
@@ -147,7 +147,7 @@
     <div class="clear"></div>
 
     <div class="flr">
-        <input type="submit" value="Create"/><span>&nbsp;&nbsp;or&nbsp;&nbsp;</span>
+        <input type="submit" value="Save Widget"/><span>&nbsp;&nbsp;or&nbsp;&nbsp;</span>
 		<a onclick="closeLightbox(); return false;" href="#">Cancel</a>
     </div>
     </form>

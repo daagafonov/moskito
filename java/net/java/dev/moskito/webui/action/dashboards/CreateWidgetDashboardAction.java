@@ -30,22 +30,26 @@ public class CreateWidgetDashboardAction extends BaseDashboardAction {
 			configAttributes.remove(WIDGET_TYPE_PARAMETER_NAME);
 			configAttributes.remove(DASHBOARD_PARAMETER_NAME);
 			System.out.println("2. Filtered create widget parameter names : " + configAttributes);
+			String widgetName = req.getParameter(WIDGET_NAME_PARAMETER_NAME);
+			if (!StringUtils.isEmpty(widgetName) && !configAttributes.isEmpty()) {
+				//			List<ProducerGroup> widgetContent = getWidgetContent(producerDecoratorBeans, configAttributes);
+				DashboardWidgetBean widget = new DashboardWidgetBean(widgetName);
+				widget.setId(getDashboards(req).getNewWidgetId());
+				widget.setType(WidgetType.getTypeByName(req.getParameter(WIDGET_TYPE_PARAMETER_NAME), WidgetType.TABLE));
+				widget.setConfigAttributes(configAttributes);
 
-//			List<ProducerGroup> widgetContent = getWidgetContent(producerDecoratorBeans, configAttributes);
-			DashboardWidgetBean widget = new DashboardWidgetBean(req.getParameter(WIDGET_NAME_PARAMETER_NAME));
-			widget.setId(getDashboards(req).getNewWidgetId());
-			widget.setType(WidgetType.getTypeByName(req.getParameter(WIDGET_TYPE_PARAMETER_NAME), WidgetType.TABLE));
-			widget.setConfigAttributes(configAttributes);
+				//			putWidgetToDashboard(req, dashboardName, widget, widgetContent);
+				DashboardBean bean = getDashboardById(req, dashboardId);
+				if (bean.getWidgetsLeft().size() >	bean.getWidgetsRight().size()) {
+					bean.addWidgetRight(widget);
+				} else {
+					bean.addWidgetLeft(widget);
+				}
 
-//			putWidgetToDashboard(req, dashboardName, widget, widgetContent);
-			DashboardBean bean = getDashboardById(req, dashboardId);
-			if (bean.getWidgetsLeft().size() > bean.getWidgetsRight().size()) {
-				bean.addWidgetRight(widget);
+				CookiePersistence.saveDashboardsToCookie(req, res);
 			} else {
-				bean.addWidgetLeft(widget);
+				//TODO log it
 			}
-			
-			CookiePersistence.saveDashboardsToCookie(req, res);
 		}
 		
 		return mapping.redirect().addParameter(DASHBOARD_PARAMETER_NAME, dashboardId);

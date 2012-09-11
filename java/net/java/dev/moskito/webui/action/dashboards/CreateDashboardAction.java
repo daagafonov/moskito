@@ -28,11 +28,13 @@ public class CreateDashboardAction extends BaseDashboardAction {
 		if (!StringUtils.isEmpty(dashboardName)) {
 			DashboardsConfig dashboards = getDashboards(req);
 			DashboardBean bean = new DashboardBean(dashboardName);
-			bean.setId(dashboards.getMaxDashId() + 1);
+			bean.setId(dashboards.getNewDashId());
 			dashboards.add(bean);
 			dashboardId = bean.getId();
 			
 			CookiePersistence.saveDashboardsToCookie(req, res);
+		} else {
+			//TODO log this
 		}
 		
 		CommandRedirect redirect = mapping.redirect();

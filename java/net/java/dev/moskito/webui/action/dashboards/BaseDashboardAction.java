@@ -56,24 +56,38 @@ public class BaseDashboardAction extends BaseMoskitoUIAction {
 	protected static final String WIDGET_TYPE_PARAMETER_NAME = "widgetType";
 	protected static final String WIDGET_ID_PARAMETER_NAME = "widgetId";
 	protected static final String RELOAD_PARAMETER_NAME = "reload";
+	protected static final String DASHBOARD_NAME = "dashboardName";
 	
 	private static final String DASHBOARDS_COOKIE_NAME = "dashboards";
-	
 	private static final String DASHBOARDS_SESSION_ATTR = "dashboards";
+	private static final String DEFAULT_DASH_PARAM_NAME = "defaultDashboard";
 	
-	protected static final String DASHBOARD_NAME = "dashboardName";
+	public static final boolean DEBUG = true;//TODO make conf-me param
 	
 	@Override
 	public ActionCommand execute(ActionMapping mapping, FormBean formBean, HttpServletRequest req, HttpServletResponse res) throws JSONException {
-		printReq(req);
+		if (DEBUG) {
+			printReq(req);
+		}
 		String selectedDashboardId = req.getParameter(DASHBOARD_PARAMETER_NAME);
+
 		DashboardBean dash = null;
 		DashboardsConfig dashes = getDashboards(req);
+		
+		String defaultDash = req.getParameter(DEFAULT_DASH_PARAM_NAME);
+		if (!StringUtils.isEmpty(defaultDash)) {
+				selectedDashboardId = defaultDash;
+			try {
+				dashes.setDefaultDashboard(dashes.getDashboard(Integer.parseInt(defaultDash)));
+			} catch (IllegalArgumentException e) {
+				//TODO log it
+			}
+		}
 
 		if (StringUtils.isEmpty(selectedDashboardId)) {
 			dash = dashes.getDefaultDashboard();
-//			if (dash != null)
-//				selectedDashboard = dash.getName();
+			if (dash != null)
+				selectedDashboardId = ""+dash.getId();
 		} else {
 			try {
 //				dashes.setSelectedDashboard(selectedDashboard);
@@ -130,17 +144,15 @@ public class BaseDashboardAction extends BaseMoskitoUIAction {
 			req.setAttribute("decorators", producerDecoratorBeans);
 			req.setAttribute("dashboards", getDashboards(req));
 			req.setAttribute("selectedDashboardId", selectedDashboardId);
-			//req.setAttribute("widgets", widgets);
-//			if (selectedDashboard != null) {
-				req.setAttribute("widgetsLeft", dash.getWidgetsLeft());
-				req.setAttribute("widgetsRight", dash.getWidgetsRight());
-//			}
+			req.setAttribute("widgetsLeft", dash.getWidgetsLeft());
+			req.setAttribute("widgetsRight", dash.getWidgetsRight());
+			req.setAttribute("defaultDashId", dashes.getDefaultDashboard().getId());
 		}
 		//req.setAttribute("graphDatas", graphData.values());
-		req.setAttribute("isCanAddWidget", dash != null);
+//		req.setAttribute("isCanAddWidget", dash != null);
 		req.setAttribute("pageTitle", "Dashboard");
 
-		return mapping.findCommand(getForward(req));
+		return mapping.findCommand(getForward(req));//TODO this isn't correct
 	}
 
 
@@ -213,8 +225,11 @@ public class BaseDashboardAction extends BaseMoskitoUIAction {
 		DashboardBean dashboard = getDashboards(req).getDashboard(dashboardId);
 		if (dashboard != null)
 			for (List<DashboardWidgetBean> widgets : new List[]{dashboard.getWidgetsLeft(), dashboard.getWidgetsRight()})
-				for (DashboardWidgetBean widget : widgets)
+				for (DashboardWidgetBean widget : widgets) {
 					widget.setProducerGroups(getWidgetContent(producerDecoratorBeans, widget.getConfigAttributes()));
+					if (DEBUG)
+						System.out.println(widget);
+				}
 	}
 	
 	/**
@@ -368,14 +383,14 @@ public class BaseDashboardAction extends BaseMoskitoUIAction {
 	}
 	
 	
-	protected static class CookiePersistence {
+	static class CookiePersistence {
 		/**
 		 * Perform saving all dashboards into cookie.
 		 *
 		 * @param req
 		 * @param res
 		 */
-		protected static void saveDashboardsToCookie(HttpServletRequest req, HttpServletResponse res) throws JSONException {
+		static void saveDashboardsToCookie(HttpServletRequest req, HttpServletResponse res) throws JSONException {
 
 			JSONObject jsonDashboards = new JSONObject();
 			DashboardsConfig config = getDashboards(req);
@@ -409,7 +424,7 @@ public class BaseDashboardAction extends BaseMoskitoUIAction {
 		 * @param req					HttpServletRequest
 		 * @throws JSONException
 		 */
-		protected static void loadDashboardsFromCookie(/*List<ProducerDecoratorBean> producerDecoratorBeans,*/ HttpServletRequest req) throws JSONException {
+		static void loadDashboardsFromCookie(/*List<ProducerDecoratorBean> producerDecoratorBeans,*/ HttpServletRequest req) throws JSONException {
 
 			DashboardsConfig dashes = new DashboardsConfig();
 			req.getSession().setAttribute(DASHBOARDS_SESSION_ATTR, dashes);
@@ -442,9 +457,14 @@ public class BaseDashboardAction extends BaseMoskitoUIAction {
 				String[] dashboardNames = JSONObject.getNames(jsonDashboards);
 				if (dashboardNames == null || dashboardNames.length == 0)
 					return;
-				
-				int selectedDash = jsonDashboards.getInt("defaultDash");
-
+				Integer selectedDash = null;
+				if (jsonDashboards.has("defaultDash")) {
+					try {
+						selectedDash = jsonDashboards.getInt("defaultDash");
+					} catch (JSONException e) {
+						//TODO log it
+					}
+				}
 				for (String dashboardName : dashboardNames) {
 					if (dashboardName.equals("defaultDash")) {
 						continue;
@@ -452,6 +472,9 @@ public class BaseDashboardAction extends BaseMoskitoUIAction {
 					JSONObject jsonDash = jsonDashboards.getJSONObject(dashboardName);
 					DashboardBean dash = DashboardBean.fromJSON(/*dashboardName, */jsonDash);
 					dashes.add(dash);
+					if (selectedDash == null) {
+						selectedDash = dash.getId();
+					}
 					if (selectedDash == dash.getId()) {
 						dashes.setDefaultDashboard(dash);
 					}
@@ -512,6 +535,5 @@ public class BaseDashboardAction extends BaseMoskitoUIAction {
 		}
 
 	}
-
-
+	
 }
